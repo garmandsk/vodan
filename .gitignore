@@ -1,0 +1,52 @@
+# ==========================================
+# 1. SUPABASE LOCAL DEVELOPMENT & SECRETS
+# ==========================================
+supabase/.temp/
+supabase/functions/**/.env
+supabase/.branches/
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# 2. FLUTTER & DART BUILD ARTIFACTS
+# ==========================================
+**/build/
+.dart_tool/
+.pub-cache/
+.pub/
+android/app/debug/
+android/app/profile/
+android/app/release/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Pods/
+macos/Pods/
+linux/flutter/ephemeral/
+windows/flutter/ephemeral/
+
+# ==========================================
+# 3. MOBILE APP SECRETS & SIGNING KEYS
+# ==========================================
+*.jks
+*.keystore
+android/key.properties
+android/app/upload-keystore.jks
+ios/Runner/Info.plist
+*service-account*.json
+credentials.json
+
+# ==========================================
+# 4. IDE & OS SPECIFIC FILES
+# ==========================================
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.DS_Store
+Thumbs.db
+Desktop.ini
