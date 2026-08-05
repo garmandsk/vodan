@@ -174,13 +174,31 @@ serve(async (req) => {
     if (finalJsonData.orders && Array.isArray(finalJsonData.orders)) {
       let totalPrice = 0;
 
-      finalJsonData.orders.forEach((order: any) => {
-        const product = menuData.find((p: any) => p.id == order.id);
+      finalJsonData.orders = finalJsonData.orders.map((order: any) => {
+        const product = menuData.find((p: any) => p.id === order.id);
+
         if (product && product.price) {
-          totalPrice += product.price * order.qty;
+          const subTotal = product.price * order.qty;
+          totalPrice += subTotal;
+
+          // Konstruk items
+          return {
+            id: order.id,
+            name: product.name,
+            price: product.price,
+            qty: order.qty,
+            subTotal: subTotal
+          };
         }
+
+        // Fallback jika produk tidak ditemukan
+        return order;
       });
 
+      // Penambahan key & Value totalPrice ke data json
+      finalJsonData.total_price = totalPrice;
+
+      // Respons total price yang dibaca flutter tts nanti
       const totalPriceResponse = `${totalPrice.toLocaleString('id-ID')} rupiah`;
 
       if (finalJsonData.voice_response.includes('[TOTAL_PRICE]')) {
