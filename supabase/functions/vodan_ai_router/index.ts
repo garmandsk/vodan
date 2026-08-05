@@ -38,6 +38,7 @@ serve(async (req) => {
       3. Define the speech configuration in 'tts_config' (pitch: 0.1-2.0, rate: 0.1-1.0).
       4. NATIVE LANGUAGE ENFORCEMENT: The 'voice_response' MUST be written entirely in the character's native language. For Japanese anime characters, you MUST generate the text using actual Japanese script (Kanji/Hiragana/Katakana), NOT English translations. ONLY the menu item name remains in Indonesian.
       5. The 'language_code' MUST accurately reflect the script generated in 'voice_response' (e.g., use 'ja-JP' ONLY if the text is in Japanese script, 'en-US' for English).
+      6. MENTIONING PRICE: You MUST include the exact placeholder [TOTAL_PRICE] in your 'voice_response' where the total price should be spoken. DO NOT calculate the math yourself. Example: "Pesanan siap! Totalnya [TOTAL_PRICE] ya."
     `;
 
     // 3. MESIN LOAD BALANCER & FALLBACK
@@ -168,6 +169,25 @@ serve(async (req) => {
     // Jika loop selesai tapi finalJsonData masih kosong, berarti semua kunci mati
     if (!finalJsonData) {
       throw new Error(`Sistem AI Sedang Sibuk atau Kuota Lapak Habis. (Error Terakhir: ${lastErrorMessage})`);
+    }
+
+    if (finalJsonData.orders && Array.isArray(finalJsonData.orders)) {
+      let totalPrice = 0;
+
+      finalJsonData.orders.forEach((order: any) => {
+        const product = menuData.find((p: any) => p.id == order.id);
+        if (product && product.price) {
+          totalPrice += product.price * order.qty;
+        }
+      });
+
+      const totalPriceResponse = `${totalPrice.toLocaleString('id-ID')} rupiah`;
+
+      if (finalJsonData.voice_response.includes('[TOTAL_PRICE]')) {
+        finalJsonData.voice_response = finalJsonData.voice_response.replace('[TOTAL_PRICE]', totalPriceResponse);
+      } else {
+        finalJsonData.voice_response += ` Totalnya ${totalPriceResponse}.`;
+      }
     }
 
     // 5. Kembalikan ke Flutter
