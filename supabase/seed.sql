@@ -43,12 +43,12 @@ VALUES
   '00000000-0000-0000-0000-000000000001', 
   'Lapak Cabang Medan', 
   extensions.crypt('123456', extensions.gen_salt('bf')), 
-  '[{"key": "AQ.Ab8RN6LcVkz0U6_rDQh8ZjUWU9V4xXNuajnmjVTvZvu-CXnvaQ", "provider": "gemini"}]'::jsonb),
+  '[{"key": "aikey", "provider": "gemini"}]'::jsonb),
   ('c0a80121-7922-4988-8422-83492384923b', 
   '00000000-0000-0000-0000-000000000003', 
   'Danus Imilkom', 
   extensions.crypt('654321', extensions.gen_salt('bf')), 
-  '[{"key": "AQ.Ab8RN6LcVkz0U6_rDQh8ZjUWU9V4xXNuajnmjVTvZvu-CXnvaE", "provider": "gemini"}]'::jsonb);
+  '[{"key": "aikey", "provider": "gemini"}]'::jsonb);
 
 INSERT INTO public.products (
   id,
