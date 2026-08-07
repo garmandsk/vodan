@@ -1,4 +1,4 @@
-class Product {
+class ProductModel {
   final String id;
   final String workspaceId;
   final String name;
@@ -9,7 +9,7 @@ class Product {
   final int sold;
   final bool isActive;
 
-  Product({
+  ProductModel({
     required this.id,
     required this.workspaceId,
     required this.name,
@@ -21,7 +21,7 @@ class Product {
     required this.isActive,
   });
 
-  Product copyWith({
+  ProductModel copyWith({
     String? name,
     String? category,
     List<String>? nlpAlias,
@@ -30,7 +30,7 @@ class Product {
     int? sold,
     bool? isActive
   }) {
-    return Product(
+    return ProductModel(
       id: id,
       workspaceId: workspaceId,
       name: name ?? this.name,
@@ -43,8 +43,8 @@ class Product {
     );
   }
 
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
       id: json['id'].toString(),
       workspaceId: json['workspace_id'].toString(),
       name: json['name'].toString(),

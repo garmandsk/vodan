@@ -4,8 +4,8 @@ enum QueueStatus {
   rejected
 }
 
-class CashierSession {
-  CashierSession({
+class CashierSessionModel {
+  CashierSessionModel({
     required this.workspaceId,
     required this.cashierName,
     required this.deviceId,
@@ -17,13 +17,13 @@ class CashierSession {
   final String deviceId;
   final QueueStatus status;
 
-  CashierSession copyWith({
+  CashierSessionModel copyWith({
     String? workspaceId,
     String? cashierName,
     String? deviceId,
     QueueStatus? status
   }) {
-    return CashierSession(
+    return CashierSessionModel(
       workspaceId: workspaceId ?? this.workspaceId,
       cashierName: cashierName ?? this.cashierName,
       deviceId: deviceId ?? this.deviceId,

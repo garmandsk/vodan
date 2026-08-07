@@ -10,8 +10,8 @@ enum TransactionStatus {
   rejected
 }
 
-class Transaction {
-  Transaction({
+class TransactionModel {
+  TransactionModel({
     required this.id,
     required this.workspaceId,
     required this.transactionTime,
@@ -31,7 +31,7 @@ class Transaction {
   final String cashierName;
   final TransactionStatus status;
 
-  Transaction copyWith({
+  TransactionModel copyWith({
     DateTime? transactionTime,
     List<dynamic>? items,
     int? totalPrice,
@@ -39,7 +39,7 @@ class Transaction {
     String? cashierName,
     TransactionStatus? status
   }) {
-    return Transaction(
+    return TransactionModel(
       id: id,
       workspaceId: workspaceId,
       transactionTime: transactionTime ?? this.transactionTime,
@@ -51,8 +51,8 @@ class Transaction {
     );
   }
 
-  factory Transaction.fromJson(Map<String, dynamic> json){
-    return Transaction(
+  factory TransactionModel.fromJson(Map<String, dynamic> json){
+    return TransactionModel(
       id: json['id'].toString(),
       workspaceId: json['workspace_id'].toString(),
       transactionTime: DateTime.parse(json['transaction_time']),

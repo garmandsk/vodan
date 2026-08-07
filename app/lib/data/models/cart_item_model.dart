@@ -1,13 +1,13 @@
-import 'product.dart';
+import 'product_model.dart';
 
-class CartItem {
-  CartItem({
+class CartItemModel {
+  CartItemModel({
     required this.product,
     required this.quantity,
     this.overridePrice
   });
 
-  final Product product;
+  final ProductModel product;
   final int quantity;
   final int? overridePrice;
 
@@ -16,12 +16,12 @@ class CartItem {
     return effectivePrice * quantity;
   }
 
-  CartItem copyWith({
-    Product? product,
+  CartItemModel copyWith({
+    ProductModel? product,
     int? quantity,
     int? overridePrice,
   }) {
-    return CartItem(
+    return CartItemModel(
       product: product ?? this.product,
       quantity: quantity ?? this.quantity,
       overridePrice: overridePrice ?? this.overridePrice
