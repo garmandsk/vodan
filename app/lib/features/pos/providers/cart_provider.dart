@@ -11,6 +11,34 @@ class Cart extends _$Cart {
     return [];
   }
 
+  void addAiOrders(List<dynamic> aiOrders, List<ProductModel> catalog) {
+    var currentState = state;
+
+    for (final order in aiOrders) {
+      final productId = order['id'] as String;
+      final qty = order['qty'] as int;
+
+      final productMatch = catalog.where((p) => p.id == productId).firstOrNull;
+      if (productMatch == null) continue;
+
+      final cartIndex = currentState.indexWhere((item) => item.product.id == productId);
+
+      if (cartIndex != -1) {
+        currentState = [
+          for (int i = 0; i < currentState.length; i++)
+            if (i == cartIndex)
+              currentState[i].copyWith(quantity: currentState[i].quantity + qty)
+            else
+              currentState[i]
+        ];
+      } else {
+        currentState = [...currentState, CartItemModel(product: productMatch, quantity: qty)];
+      }
+    }
+
+    state = currentState;
+  }
+
   void addProduct(ProductModel product) {
     final index = state.indexWhere((item) => item.product.id == product.id);
 
