@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vodan/core/providers/supabase_provider.dart';
 import '../models/product_model.dart';
 
 // Identitas dari riverpod_generator
@@ -27,5 +28,5 @@ class ProductRepository {
 
 @riverpod
 ProductRepository productRepository(Ref ref) {
-  return ProductRepository(Supabase.instance.client);
+  return ProductRepository(ref.watch(supabaseClientProvider));
 }

@@ -53,3 +53,7 @@ Desktop.ini
 
 halo.txt
 tes.txt
+
+# Envied Secrets
+.env
+*.g.dart

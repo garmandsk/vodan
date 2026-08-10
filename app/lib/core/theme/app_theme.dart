@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:vodan/core/theme/transition_builder.dart';
 
 class AppTheme {
   // 1. PALET WARNA (Color Scheme)
   // Kita gunakan warna primer yang membangkitkan selera & energi (misal: Deep Orange/Indigo)
-  static const Color primaryColor = Color(0xFFE65100); // Oranye Gelap
+  static const Color primaryColor = Color.fromRGBO(230, 81, 0, 1); // Oranye Gelap
   static const Color secondaryColor = Color(0xFF2E7D32); // Hijau untuk sukses/uang
-  static const Color backgroundColor = Color(0xFFF5F7FA); // Abu-abu sangat terang (bersih)
-  static const Color surfaceColor = Colors.white;
+  static const Color surfaceColor = Color(0xFFF5F7FA);
   static const Color errorColor = Color(0xFFD32F2F);
   static const Color textPrimary = Color(0xFF1E293B);
   static const Color textSecondary = Color(0xFF64748B);
@@ -15,13 +15,21 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: surfaceColor,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: secondaryColor,
-        background: backgroundColor,
         surface: surfaceColor,
         error: errorColor,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: EaseInOutFadePageTransationBuilder(),
+          TargetPlatform.iOS: EaseInOutFadePageTransationBuilder(),
+          TargetPlatform.windows: EaseInOutFadePageTransationBuilder(),
+          TargetPlatform.macOS: EaseInOutFadePageTransationBuilder(),
+          TargetPlatform.linux: EaseInOutFadePageTransationBuilder(),
+        }
       ),
 
       // 3. TIPOGRAFI (Text Theme)

@@ -96,3 +96,7 @@ credentials.json
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Envied Secrets
+.env
+*.g.dart
