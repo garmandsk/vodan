@@ -47,8 +47,12 @@ serve(async (req) => {
 
     // Lakukan perulangan untuk setiap kunci yang terdaftar (prioritaskan Gemini, fallback ke GPT)
     for (const keyObj of aiKeys) {
+      const provider = keyObj.provider.toLowerCase();
+      // console.log('provider: ' + provider);
+      // console.log('key: ' + keyObj.key);
+
       try {
-        if (keyObj.provider === 'gemini') {
+        if (provider === 'gemini') {
            // Eksekusi API Gemini
           const models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite',];
 

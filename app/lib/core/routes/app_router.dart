@@ -1,21 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
 import 'package:vodan/core/routes/error_routes.dart';
 import 'package:vodan/features/pos/workspace_screen.dart';
-import 'package:vodan/features/workspace_auth/enter_workspace_screen.dart';
+import 'package:vodan/features/workspace_auth/presentation/screens/enter_workspace_screen.dart';
 
-import '../../features/onboarding/splash_screen.dart';
-import '../../features/onboarding/welcome_screen.dart';
+import '../../features/onboarding/presentation/screens/splash_screen.dart';
+import '../../features/onboarding/presentation/screens/welcome_screen.dart';
 import '../../features/account_auth/presentation/screens/register_screen.dart';
 import '../../features/account_auth/presentation/screens/login_screen.dart';
-import '../../features/workspace_auth/create_workspace_screen.dart';
-import '../../features/workspace_auth/workspace_created_screen.dart';
-import '../../features/workspace_auth/enter_workspace_screen.dart';
-import '../../features/pos/workspace_screen.dart';
+import '../../features/workspace_auth/presentation/screens/create_workspace_screen.dart';
+import '../../features/workspace_auth/presentation/screens/workspace_created_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -55,39 +55,5 @@ GoRouter appRouter(Ref ref) {
       return ErrorRoute(error: error).build(context, state);
     },
     refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
-    redirect: (context, state) {
-      final session = supabase.auth.currentSession;
-      final isLoggedIn = session != null;
-
-      final isGoingToSplash = state.matchedLocation == const SplashRoute().location;
-      final isGoingToLogin = state.matchedLocation == const LoginRoute().location;
-      final isGoingToRegister = state.matchedLocation == const RegisterRoute().location;
-      final isGoingToWelcome = state.matchedLocation == const WelcomeRoute().location;
-      
-      final isGoingToAuthOrWelcome = isGoingToSplash || isGoingToWelcome || isGoingToLogin || isGoingToRegister;
-
-      final isGoingToAuth = isGoingToRegister || isGoingToLogin;
-
-      // Belum login tapi mencoba masuk ke halaman utama
-      if (!isLoggedIn && !isGoingToAuthOrWelcome) {
-        final fromPath = state.uri.toString();
-        return Uri(
-          path: const LoginRoute().location,
-          queryParameters: {'from': fromPath}
-        ).toString();
-      }
-
-      // Sudah login tapi mencoba kembali ke halaman login/welcome
-      if (isLoggedIn && isGoingToAuth) {
-        final previousDestination = state.uri.queryParameters['from'];
-        if (previousDestination != null && previousDestination.isNotEmpty) {
-          return previousDestination;
-        }
-
-        return const WorkspaceRoute().location;
-      }
-
-      return null;
-    }
   );
 }

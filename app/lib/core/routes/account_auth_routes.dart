@@ -6,12 +6,34 @@ class RegisterRoute extends GoRouteData with $RegisterRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const RegisterScreen();
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
+    final session = supabase.auth.currentSession;
+    final bool isLoggedIn = session != null;
+
+    if (isLoggedIn) return EnterWorkspaceRoute().location;
+    return null;
+  }
 }
 
 @TypedGoRoute<LoginRoute>(path: '/login')
 class LoginRoute extends GoRouteData with $LoginRoute {
-  const LoginRoute();
+  const LoginRoute({this.from});
+
+  final String? from;
 
   @override
   Widget build(BuildContext context, GoRouterState state) => LoginScreen();
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
+    final session = supabase.auth.currentSession;
+    final bool isLoggedIn = session != null;
+
+    if (isLoggedIn) return from ?? EnterWorkspaceRoute().location;
+    return null;
+  }
 }

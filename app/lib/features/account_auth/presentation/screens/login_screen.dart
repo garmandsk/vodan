@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/vodan_scaffold.dart';
+import 'package:vodan/features/account_auth/data/models/login_request__model.dart';
 import '../controllers/account_auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    this.from,
+  });
+
+  final String? from;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -17,6 +24,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  bool _isPasswordObscure = true;
+
+  void _submitLoginForm() {
+    final isLoading = ref.read(accountAuthControllerProvider).isLoading;
+    if (isLoading) return;
+
+    if (_formKey.currentState!.validate()) {
+      final loginRequestData = LoginRequestModel(
+        email: _emailController.text.trim(), 
+        password: _passwordController.text.trim()
+      );
+
+      // jalankan proses login
+      ref.read(accountAuthControllerProvider.notifier).login(loginRequestData);
+
+      final destination = widget.from;
+      if (destination != null || destination!.isNotEmpty) {
+        context.go(destination);
+      } else {
+        const EnterWorkspaceRoute().go(context);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -52,8 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     );
 
-    final authState = ref.watch(accountAuthControllerProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(accountAuthControllerProvider).isLoading;
 
     return VodanScaffold(
       title: 'Masuk ke VoDan',
@@ -91,9 +121,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16,),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                  obscureText: _isPasswordObscure,
                   keyboardType: TextInputType.visiblePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password', 
+                    prefixIcon: Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordObscure
+                        ? Icons.visibility_off
+                        : Icons.visibility
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscure = !_isPasswordObscure;
+                        });
+                      },
+                    )
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password tidak boleh kosong!';
@@ -104,14 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32,),
             
                 ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () {
-                        ref.read(accountAuthControllerProvider.notifier).login(
-                          _emailController.text.trim(),
-                          _passwordController.text.trim()
-                        );
-                      }, 
+                  onPressed: isLoading ? null : _submitLoginForm, 
                   child: isLoading 
                       ? const SizedBox(
                         height: 20,

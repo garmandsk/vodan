@@ -9,17 +9,42 @@ class CreateWorkspaceRoute extends GoRouteData with $CreateWorkspaceRoute {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    // TODO: implement redirect
+    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
+    final session = supabase.auth.currentSession;
+    final bool isLoggedIn = session != null;
+
+    if (!isLoggedIn) {
+      final fromPath = state.uri.toString();
+      return LoginRoute(from: fromPath).location;
+    }
     return null;
   }
 }
 
-@TypedGoRoute<WorkspaceCreatedRoute>(path: '/workspace-created')
-class WorkspaceCreatedRoute extends GoRouteData with $WorkspaceCreatedRoute{
-  const WorkspaceCreatedRoute();
+@TypedGoRoute<WorkspaceCreatedEmptyRoute>(path: '/workspace-created')
+class WorkspaceCreatedEmptyRoute extends GoRouteData with $WorkspaceCreatedEmptyRoute{
+  const WorkspaceCreatedEmptyRoute();
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => WorkspaceCreatedScreen();
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    return const CreateWorkspaceRoute().location;
+  }
+}
+
+@TypedGoRoute<WorkspaceCreatedRoute>(path: '/workspace-created/:workspaceId')
+class WorkspaceCreatedRoute extends GoRouteData with $WorkspaceCreatedRoute{
+  const WorkspaceCreatedRoute({required this.workspaceId});
+
+  final String workspaceId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => WorkspaceCreatedScreen(workspaceId: workspaceId);
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    if (workspaceId.isEmpty) return CreateWorkspaceRoute().location;
+    return null;
+  }
 }
 
 @TypedGoRoute<EnterWorkspaceRoute>(path: '/enter-workspace')

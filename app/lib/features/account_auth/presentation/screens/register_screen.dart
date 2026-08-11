@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/vodan_scaffold.dart';
+import 'package:vodan/features/account_auth/data/models/register_request_model.dart';
 import '../controllers/account_auth_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -20,6 +20,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  bool _isPasswordObscure = true;
+  bool _isConfirmPasswordObscure = true;
+
+  void _submitRegisterForm() {
+    final isLoading = ref.read(accountAuthControllerProvider).isLoading;
+    if (isLoading) return;
+
+    if (_formKey.currentState!.validate()) {
+      final registerRequestData = RegisterRequestModel(
+        email: _emailController.text.trim(), 
+        password: _passwordController.text.trim(), 
+        displayName: _nameController.text.trim()
+      );
+
+      ref.read(accountAuthControllerProvider.notifier).register(registerRequestData);
+      
+      // Redirect ke login saat register berhasil
+      LoginRoute().go(context);
+    }
+  }
 
   @override
   void dispose() {
@@ -45,9 +66,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 backgroundColor: Colors.green,
               )
             );
-
-            // Redirect ke login saat register berhasil
-            LoginRoute().go(context);
           }, 
           error: (error, stackTrace) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal Mendaftar: ${error.toString()}'), backgroundColor: Theme.of(context).colorScheme.error,));
@@ -106,9 +124,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16,),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_clock_outlined)),
-                  keyboardType: TextInputType.visiblePassword,
+                  obscureText: _isPasswordObscure,
+                  decoration: InputDecoration(
+                    labelText: 'Password', 
+                    prefixIcon: Icon(Icons.lock_clock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordObscure
+                        ? Icons.visibility_off
+                        : Icons.visibility
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordObscure = !_isPasswordObscure;
+                        });
+                      },
+                    ) 
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password tidak boleh kosong!';
@@ -122,9 +154,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16,),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Konfirmasi Password', prefixIcon: Icon(Icons.screen_lock_landscape_outlined)),
-                  keyboardType: TextInputType.visiblePassword,
+                  obscureText: _isConfirmPasswordObscure,
+                  decoration: InputDecoration(
+                    labelText: 'Konfirmasi Password', 
+                    prefixIcon: Icon(Icons.screen_lock_landscape_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isConfirmPasswordObscure
+                        ? Icons.visibility_off
+                        : Icons.visibility
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isConfirmPasswordObscure = !_isConfirmPasswordObscure;
+                        });
+                      },
+                    )
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Konfirmasi Password tidak boleh kosong!';
@@ -139,17 +185,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 32,),
             
                 ElevatedButton(
-                  onPressed: isLoading
-                      ? null  
-                      : () {
-                        if (_formKey.currentState!.validate()) {
-                          ref.read(accountAuthControllerProvider.notifier).register(
-                            _nameController.text.trim(),
-                            _emailController.text.trim(),
-                            _passwordController.text.trim()
-                          );
-                        }
-                      },             
+                  onPressed: isLoading ? null : _submitRegisterForm,             
                   child: isLoading
                       ? const SizedBox(
                         height: 20,
