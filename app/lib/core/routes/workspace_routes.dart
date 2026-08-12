@@ -21,8 +21,8 @@ class WorkspaceRoute extends GoRouteData with $WorkspaceRoute {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider); 
-    final session = supabase.auth.currentSession;
+    // final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider); 
+    final session = Supabase.instance.client.auth.currentSession;
     final isLoggedIn = session != null;
 
     if (!isLoggedIn) return const LoginRoute().location;
@@ -30,6 +30,29 @@ class WorkspaceRoute extends GoRouteData with $WorkspaceRoute {
     final previousDestination = state.uri.queryParameters['from'];
     if (previousDestination != null && previousDestination.isNotEmpty) {
       return previousDestination;
+    }
+
+    return null;
+  }
+}
+
+@TypedGoRoute<WorkspaceListRoute>(path: '/workspace-list')
+class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
+  const WorkspaceListRoute();
+
+  @override  
+  Widget build(BuildContext context, GoRouterState state) => WorkspaceListScreen();
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    // final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider); 
+    final session = Supabase.instance.client.auth.currentSession;
+    final isLoggedIn = session != null;
+
+    if (!isLoggedIn) {
+      final fromPath = state.uri.toString();
+      print('fromPath: $fromPath');
+      return LoginRoute(from: fromPath).location;
     }
 
     return null;

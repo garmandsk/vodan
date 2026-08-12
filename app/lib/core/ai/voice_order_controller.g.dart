@@ -42,7 +42,7 @@ final class VoiceOrderControllerProvider
 }
 
 String _$voiceOrderControllerHash() =>
-    r'ff3b54f5a3ba122f5cae095027e82981bec1d622';
+    r'4b8ab252822cec37bb516b2e7d91fd78005f164e';
 
 abstract class _$VoiceOrderController extends $Notifier<VoiceOrderState> {
   VoiceOrderState build();

@@ -1,6 +1,6 @@
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vodan/core/presentation/error_screen.dart';
+import 'package:vodan/core/presentation/screens/error_screen.dart';
 
 class ErrorRoute extends GoRouteData {
   const ErrorRoute({required this.error});

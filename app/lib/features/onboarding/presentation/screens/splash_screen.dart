@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
-import 'package:vodan/core/presentation/vodan_scaffold.dart';
+import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context){
     return VodanScaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      scaffoldBackgroundColor: Theme.of(context).colorScheme.primary,
       body: Center(
         child: TweenAnimationBuilder<double>(
           tween: Tween<double>(begin: 0.0, end: 1.0), 

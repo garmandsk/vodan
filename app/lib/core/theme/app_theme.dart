@@ -6,6 +6,7 @@ class AppTheme {
   // Kita gunakan warna primer yang membangkitkan selera & energi (misal: Deep Orange/Indigo)
   static const Color primaryColor = Color.fromRGBO(230, 81, 0, 1); // Oranye Gelap
   static const Color secondaryColor = Color(0xFF2E7D32); // Hijau untuk sukses/uang
+  static const Color tertiaryColor = Colors.blue;
   static const Color surfaceColor = Color(0xFFF5F7FA);
   static const Color errorColor = Color(0xFFD32F2F);
   static const Color textPrimary = Color(0xFF1E293B);
@@ -18,7 +19,9 @@ class AppTheme {
       scaffoldBackgroundColor: surfaceColor,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
+        onPrimary: surfaceColor,
         secondary: secondaryColor,
+        tertiary: tertiaryColor,
         surface: surfaceColor,
         error: errorColor,
       ),
@@ -40,15 +43,13 @@ class AppTheme {
         titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary),
         bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: textPrimary),
         bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: textSecondary),
-        labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.bold), // Untuk teks tombol
+        labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: surfaceColor), // 
       ),
 
       // 4. TEMA TOMBOL (Button Theme)
       // Tombol di aplikasi POS HAMPIR SEMUANYA harus besar agar mudah ditekan!
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
           minimumSize: const Size(88, 56), // Tinggi 56px sangat ideal untuk sentuhan jari (Touch Target)
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12), // Tidak terlalu bulat, terkesan profesional

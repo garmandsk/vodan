@@ -9,12 +9,13 @@ class CreateWorkspaceRoute extends GoRouteData with $CreateWorkspaceRoute {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
-    final session = supabase.auth.currentSession;
+    // final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
+    final session = Supabase.instance.client.auth.currentSession;
     final bool isLoggedIn = session != null;
 
     if (!isLoggedIn) {
       final fromPath = state.uri.toString();
+      print('fromPath: $fromPath');
       return LoginRoute(from: fromPath).location;
     }
     return null;

@@ -9,8 +9,8 @@ class RegisterRoute extends GoRouteData with $RegisterRoute {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
-    final session = supabase.auth.currentSession;
+    // final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
+    final session = Supabase.instance.client.auth.currentSession;
     final bool isLoggedIn = session != null;
 
     if (isLoggedIn) return EnterWorkspaceRoute().location;
@@ -29,8 +29,8 @@ class LoginRoute extends GoRouteData with $LoginRoute {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
-    final session = supabase.auth.currentSession;
+    // final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider);
+    final session = Supabase.instance.client.auth.currentSession;
     final bool isLoggedIn = session != null;
 
     if (isLoggedIn) return from ?? EnterWorkspaceRoute().location;

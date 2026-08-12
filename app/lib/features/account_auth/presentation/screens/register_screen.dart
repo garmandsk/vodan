@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
+import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
-import 'package:vodan/core/presentation/vodan_scaffold.dart';
+import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/features/account_auth/data/models/register_request_model.dart';
 import '../controllers/account_auth_controller.dart';
 
@@ -80,129 +82,125 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return VodanScaffold(
       title: 'Daftar Akun VoDan',
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(Icons.person_add_alt_1_rounded, size: 64, color: Theme.of(context).primaryColor,),
-                Text('Buat Akun', style: Theme.of(context).textTheme.headlineMedium,),
-                const SizedBox(height: 8,),
-                Text('Langkah pertama untuk membuat lapak barumu.', style: Theme.of(context).textTheme.bodyMedium,),
-                const SizedBox(height: 32,),
-            
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Nama', prefixIcon: Icon(Icons.person_outline)),
-                  keyboardType: TextInputType.name,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama tidak boleh kosong';
-                    }
-                    return null;
-                  },
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 16,
+            children: [
+              VodanHeader(
+                icon: Icons.person_add_alt_1_rounded, 
+                title: 'Buat Akun',
+                titleStyle: Theme.of(context).textTheme.headlineMedium,
+                subtitle: 'Langkah pertama untuk membuat lapak barumu.',
+                subtitleStyle: Theme.of(context).textTheme.bodyMedium,
+              ),
+          
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nama', prefixIcon: Icon(Icons.person_outline)),
+                keyboardType: TextInputType.name,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nama tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+      
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Email tidak boleh kosong';
+                  }
+                  if (!value.contains('@') || !value.contains('.')) {
+                    return 'Format tidak valid';
+                  }
+                  return null;
+                },
+              ),
+      
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _isPasswordObscure,
+                decoration: InputDecoration(
+                  labelText: 'Password', 
+                  prefixIcon: Icon(Icons.lock_clock_outlined),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscure
+                      ? Icons.visibility_off
+                      : Icons.visibility
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordObscure = !_isPasswordObscure;
+                      });
+                    },
+                  ) 
                 ),
-                const SizedBox(height: 16,),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email tidak boleh kosong';
-                    }
-                    if (!value.contains('@') || !value.contains('.')) {
-                      return 'Format tidak valid';
-                    }
-                    return null;
-                  },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password tidak boleh kosong!';
+                  } 
+                  if (value.length < 6) {
+                    return 'Password minimal 6 karakter';
+                  }
+                  return null;
+                },
+              ),
+      
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _isConfirmPasswordObscure,
+                decoration: InputDecoration(
+                  labelText: 'Konfirmasi Password', 
+                  prefixIcon: Icon(Icons.screen_lock_landscape_outlined),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordObscure
+                      ? Icons.visibility_off
+                      : Icons.visibility
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordObscure = !_isConfirmPasswordObscure;
+                      });
+                    },
+                  )
                 ),
-                const SizedBox(height: 16,),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _isPasswordObscure,
-                  decoration: InputDecoration(
-                    labelText: 'Password', 
-                    prefixIcon: Icon(Icons.lock_clock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordObscure
-                        ? Icons.visibility_off
-                        : Icons.visibility
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordObscure = !_isPasswordObscure;
-                        });
-                      },
-                    ) 
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password tidak boleh kosong!';
-                    } 
-                    if (value.length < 6) {
-                      return 'Password minimal 6 karakter';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16,),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: _isConfirmPasswordObscure,
-                  decoration: InputDecoration(
-                    labelText: 'Konfirmasi Password', 
-                    prefixIcon: Icon(Icons.screen_lock_landscape_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isConfirmPasswordObscure
-                        ? Icons.visibility_off
-                        : Icons.visibility
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isConfirmPasswordObscure = !_isConfirmPasswordObscure;
-                        });
-                      },
-                    )
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Konfirmasi Password tidak boleh kosong!';
-                    }
-                    if (value != _passwordController.text.trim()) {
-                      return 'Password tidak sama!';
-                    }
-                    return null;
-                  },
-                ),
-                
-                const SizedBox(height: 32,),
-            
-                ElevatedButton(
-                  onPressed: isLoading ? null : _submitRegisterForm,             
-                  child: isLoading
-                      ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2,),
-                      )
-                      : const Text('Daftar Sekarang'),
-                ),
-                const SizedBox(height: 16,),
-                TextButton(
-                  onPressed: () {
-                    LoginRoute().go(context);
-                  },
-                  child: const Text('Sudah punya akun? Masuk di sini')
-                )
-              ],
-            ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Konfirmasi Password tidak boleh kosong!';
+                  }
+                  if (value != _passwordController.text.trim()) {
+                    return 'Password tidak sama!';
+                  }
+                  return null;
+                },
+              ),
+              
+              const SizedBox(height: 16,),
+          
+              VodanActionButton(
+                text: 'Daftar Sekarang', 
+                isLoading: isLoading,
+                onPressed: _submitRegisterForm
+              ),
+              VodanActionButton(
+                text: 'Sudah punya akun? Masuk di sini', 
+                backgroundColor: Theme.of(context).colorScheme.onPrimary,
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                elevation: 0,
+                onPressed: () => LoginRoute().go(context)
+              )
+            ],
           ),
         ),
       )

@@ -4,9 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
 import 'package:vodan/core/routes/error_routes.dart';
-import 'package:vodan/features/pos/workspace_screen.dart';
+import 'package:vodan/features/workspace/presentation/screens/workspace_list_screen.dart';
+import 'package:vodan/features/workspace/presentation/screens/workspace_screen.dart';
 import 'package:vodan/features/workspace_auth/presentation/screens/enter_workspace_screen.dart';
 
 import '../../features/onboarding/presentation/screens/splash_screen.dart';

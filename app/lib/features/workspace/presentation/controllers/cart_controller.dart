@@ -1,11 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../data/models/cart_item_model.dart';
-import '../../../data/models/product_model.dart';
+import '../../../../data/models/cart_item_model.dart';
+import '../../../../data/models/product_model.dart';
 
-part 'cart_provider.g.dart';
+part 'cart_controller.g.dart';
 
 @riverpod 
-class Cart extends _$Cart {
+class CartController extends _$CartController {
   @override 
   List<CartItemModel> build() {
     return [];

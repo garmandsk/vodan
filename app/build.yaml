@@ -1,0 +1,13 @@
+targets:
+  $default:
+    sources:
+      include:
+        - "$package$"
+        - "lib/**"
+      exclude:
+        - "lib/core/presentation/**"
+        - "lib/core/theme/**"
+        - "lib/features/account_auth/presentation/screens/**"
+        - "lib/features/onboarding/presentation/screens/**"
+        - "lib/features/workspace/presentation/screens/**"
+        - "lib/features/workspace_auth/presentation/screens/**"

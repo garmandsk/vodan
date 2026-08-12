@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
-import 'package:vodan/core/presentation/vodan_scaffold.dart';
+import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 
 
 class ErrorScreen extends StatelessWidget {

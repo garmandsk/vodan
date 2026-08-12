@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vodan/core/presentation/vodan_scaffold.dart';
+import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 
 class WorkspaceScreen extends StatelessWidget {
   const WorkspaceScreen({

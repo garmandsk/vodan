@@ -1,23 +1,17 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:vodan/features/pos/providers/cart_provider.dart';
-import 'package:vodan/features/pos/providers/product_provider.dart';
+import 'package:vodan/features/workspace/presentation/controllers/cart_controller.dart';
+import 'package:vodan/features/workspace/presentation/controllers/product_controller.dart';
 import 'ai_service.dart';
 import 'stt_service.dart';
 import 'tts_service.dart';
 
 part 'voice_order_controller.g.dart';
 
-enum VoiceOrderState {
-  idle,
-  listening,
-  processing,
-  success,
-  error
-}
+enum VoiceOrderState { idle, listening, processing, success, error }
 
 @riverpod
-class VoiceOrderController extends _$VoiceOrderController{
-  @override 
+class VoiceOrderController extends _$VoiceOrderController {
+  @override
   VoiceOrderState build() {
     return VoiceOrderState.idle;
   }
@@ -44,19 +38,18 @@ class VoiceOrderController extends _$VoiceOrderController{
     try {
       final aiService = ref.read(aiServiceProvider);
       final aiResult = await aiService.processVoiceOrder(workspaceId, text);
-      final catalog = ref.read(productListProvider(workspaceId)).value ?? [];
+      final catalog = ref.read(productListControllerProvider(workspaceId)).value ?? [];
       final orders = aiResult['orders'] as List<dynamic>;
 
       print('🛒 [KERANJANG] Menambahkan: $orders');
-      ref.read(cartProvider.notifier).addAiOrders(orders, catalog);
+      ref.read(cartControllerProvider.notifier).addAiOrders(orders, catalog);
 
       final ttsConfig = aiResult['tts_config'];
       await ref.read(ttsServiceProvider.notifier).speak(
-        aiResult['voice_response'],
-        languageCode: ttsConfig['language_code'],
-        pitch: (ttsConfig['pitch'] as num).toDouble(),
-        rate: (ttsConfig['rate'] as num).toDouble()
-      );
+          aiResult['voice_response'],
+          languageCode: ttsConfig['language_code'],
+          pitch: (ttsConfig['pitch'] as num).toDouble(),
+          rate: (ttsConfig['rate'] as num).toDouble());
 
       state = VoiceOrderState.success;
 
@@ -69,9 +62,9 @@ class VoiceOrderController extends _$VoiceOrderController{
       print('❌ AI Error: $e');
       state = VoiceOrderState.error;
 
-      await ref.read(ttsServiceProvider.notifier).speak(
-        'Maaf, sistem sedang sibuk. Tolong ulangi pesanan.'
-      );
+      await ref
+          .read(ttsServiceProvider.notifier)
+          .speak('Maaf, sistem sedang sibuk. Tolong ulangi pesanan.');
 
       Future.delayed(const Duration(seconds: 3), () {
         if (state == VoiceOrderState.error) {
