@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 
 import 'core/env/env.dart';
 import 'core/routes/app_router.dart';
@@ -16,8 +18,15 @@ void main() async {
     publishableKey: Env.supabasePublishableKey
   );
 
+  final prefs = await SharedPreferences.getInstance();
+
   runApp(
-    const ProviderScope(child: VodanApp())
+    ProviderScope(
+      overrides: [
+        sharedPrefsProvider.overrideWithValue(prefs),
+      ],
+      child: VodanApp(),
+    )
   );
 }
 

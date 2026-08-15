@@ -5,6 +5,7 @@ import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
+import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/features/workspace_auth/presentation/controllers/workspace_auth_controller.dart';
 import '../../data/models/create_workspace_request_model.dart';
@@ -125,9 +126,11 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                   ),
               ),
       
-              TextFormField(
+              VodanTextFormField(
+                labelText: 'Nama Lapak / Toko', 
+                prefixIcon: Icons.store_outlined,
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nama Lapak / Toko', prefixIcon: Icon(Icons.store_outlined)),
+                keyboardType: TextInputType.name,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Nama Lapak tidak boleh kosong!';
@@ -136,25 +139,22 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                 },
               ),
       
-              TextFormField(
+              VodanTextFormField(
                 controller: _adminPinController,
                 obscureText: _isAdminPinObscure,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Pin Admin Lapak', 
-                  prefixIcon: Icon(Icons.dialpad),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isAdminPinObscure 
-                      ? Icons.visibility_off 
-                      : Icons.visibility
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isAdminPinObscure = !_isAdminPinObscure;
-                      });
-                    }
-                  )
+                labelText: 'Pin Admin Lapak', 
+                prefixIcon: Icons.dialpad,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isAdminPinObscure 
+                    ? Icons.visibility_off 
+                    : Icons.visibility
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isAdminPinObscure = !_isAdminPinObscure;
+                    });
+                  }
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
@@ -220,26 +220,24 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
       
                       Expanded(
                         flex: 3,
-                        child: TextFormField(
+                        child: VodanTextFormField(
+                          labelText: 'API Key',
+                          prefixIcon: Icons.key_rounded,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              row.isObscure 
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                row.isObscure = !row.isObscure;
+                              });
+                            },
+                          ),
                           controller: row.keyController,
                           obscureText: row.isObscure,
                           enabled: !isLoading,
-                          decoration: InputDecoration(
-                            labelText: 'API Key',
-                            prefixIcon: Icon(Icons.key_rounded),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                row.isObscure 
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  row.isObscure = !row.isObscure;
-                                });
-                              },
-                            )
-                          ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'API Key wajib diisi';
@@ -268,9 +266,9 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
       
               Align(
                 alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Tambah Key'),
+                child: VodanActionButton(
+                  text: 'Tambah Key',
+                  prefixIcon: Icons.add,
                   onPressed: isLoading ? null : () {
                     setState(() {
                       _aiKeyRows.add(_AiKeyFormRow());

@@ -7,7 +7,7 @@ class VodanActionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.prefixIcon,
-    this.suffixIcon = Icons.chevron_right_rounded,
+    this.suffixIcon,
     required this.color,
     required this.onTap,
   }); 
@@ -15,7 +15,7 @@ class VodanActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData prefixIcon;
-  final IconData suffixIcon;
+  final Widget? suffixIcon;
   final Color color;
   final VoidCallback onTap;
 
@@ -49,6 +49,7 @@ class VodanActionCard extends StatelessWidget {
               // Teks Penjelasan
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -71,7 +72,7 @@ class VodanActionCard extends StatelessWidget {
               ),
               
               // Panah Kanan
-              Icon(suffixIcon, color: Colors.grey.shade400),
+              suffixIcon ?? Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
             ],
           ),
         ),

@@ -1,38 +1,14 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
-import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
 
-part 'workspace_auth_repository.g.dart';
+part 'waiting_room_repository.g.dart';
 
-class WorkspaceAuthRepository {
-  WorkspaceAuthRepository(this._supabase);
+class WaitingRoomRepository {
+  WaitingRoomRepository(this._supabase);
 
   final SupabaseClient _supabase;
-
-  Future<String> createWorkspace({required CreateWorkspaceRequestModel data}) async {
-    try {
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
-        throw Exception('Sesi telah habis, silahkan login kembali.');
-      }
-
-      final payload = data.toJson();
-      payload['owner_id'] = userId;
-
-      final response = await _supabase
-          .from('workspaces')
-          .insert(payload)
-          .select('id')
-          .single();
-
-      return response['id'] as String;
-      
-    } catch (e) {
-      throw Exception('Gagal membuat lapak: $e');
-    }
-  }
-
+  
   Future<String> joinWaitingRoom({required String workspaceId, required String cashierName}) async {
     final response = await _supabase.from('cashier_queue').insert({
       'workspace_id': workspaceId,
@@ -49,7 +25,7 @@ class WorkspaceAuthRepository {
         .from('cashier_queue')
         .stream(primaryKey: ['id'])
         .eq('id', sessionId)
-        .map((event) => event.first); 
+        .map((event) => event.first);
   }
 
   // Stream: Pantau Kasir Lain di Ruang Tunggu yang Sama (Status Pending)
@@ -59,7 +35,10 @@ class WorkspaceAuthRepository {
         .stream(primaryKey: ['id'])
         .eq('workspace_id', workspaceId)
         .eq('status', 'pending')
-        .neq('id', mySessionId);
+        .neq('id', mySessionId)
+        .handleError((error) {
+          print('Stream error caught: $error');
+        });
   }
 
   // Update Nama / Workspace ID (Saat user menekan tombol Edit)
@@ -72,23 +51,41 @@ class WorkspaceAuthRepository {
 
   // Validasi Tiket Akses Shift (QR Dinamis)
   Future<bool> validateShiftPass(String passCode, String workspaceId, String sessionId) async {
-    final response = await _supabase
-        .from('shift_passes')
-        .select()
-        .eq('pass_code', passCode)
-        .eq('workspace_id', workspaceId)
-        .gte('expires_at', DateTime.now().toIso8601String()) 
-        .maybeSingle();
+    print('passcode: $passCode');
+    print('workspaceid: $workspaceId');
 
-    if (response != null) {
+    try {
+      final Map<String, dynamic>? response = await _supabase
+          .from('shift_passes')
+          .select()
+          .eq('pass_code', passCode)
+          .eq('workspace_id', workspaceId)
+          // 🌟 Filter ini SUDAH membuang tiket yang kedaluwarsa secara otomatis!
+          .gte('expires_at', DateTime.now().toIso8601String()) 
+          .maybeSingle();
+
+      print('📦 [DEBUG REPO] Hasil mentah dari Supabase: $response');
+
+      // 🌟 1. CEK NULL DULUAN (Wajib paling atas!)
+      if (response == null) {
+        // Jika null, berarti tiketnya antara tidak ada, beda Lapak, atau sudah kedaluwarsa
+        print('❌ [DEBUG REPO] Tiket GAGAL! Alasan: Tidak ditemukan / Beda Lapak / Kedaluwarsa.');
+        return false;
+      } 
+      
+      // 🌟 2. JIKA SAMPAI DI SINI, BERARTI TIKETNYA 100% VALID & AKTIF
       await _supabase.from('cashier_queue').update({'status': 'approved'}).eq('id', sessionId);
+      print('✅ [DEBUG REPO] Tiket VALID! Status kasir diubah jadi approved.');
       return true;
+
+    } catch (e) {
+      print('🚨 [DEBUG REPO] ERROR FATAL: $e');
+      return false;
     }
-    return false; 
   }
 }
 
 @Riverpod(keepAlive: true)
-WorkspaceAuthRepository workspaceAuthRepository(Ref ref) {
-  return WorkspaceAuthRepository(ref.watch(supabaseClientProvider));
+WaitingRoomRepository waitingRoomRepo(Ref ref) {
+  return WaitingRoomRepository(ref.watch(supabaseClientProvider));
 }

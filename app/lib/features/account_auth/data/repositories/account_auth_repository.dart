@@ -58,7 +58,7 @@ class AccountAuthRepository {
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 AccountAuthRepository accountAuthRepository(Ref ref) {
   return AccountAuthRepository(ref.watch(supabaseClientProvider));
 }

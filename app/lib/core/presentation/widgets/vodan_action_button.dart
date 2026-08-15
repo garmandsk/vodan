@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class VodanActionButton extends StatelessWidget {
-  VodanActionButton({
+  const VodanActionButton({
     super.key,
     this.height = 50.0,
     required this.text,
+    this.prefixIcon,
+    this.suffixIcon,
     this.backgroundColor,
     this.foregroundColor,
     this.elevation,
@@ -14,6 +16,8 @@ class VodanActionButton extends StatelessWidget {
 
   final double height;
   final String text;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
   final Color? backgroundColor;
   final Color? foregroundColor;
   final double? elevation;
@@ -22,13 +26,15 @@ class VodanActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveForegroundColor = foregroundColor ?? Theme.of(context).colorScheme.onPrimary;
+    
     return SizedBox(
       height: height,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed, 
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.primary,
-          foregroundColor: foregroundColor ?? Theme.of(context).colorScheme.onPrimary,
+          foregroundColor: effectiveForegroundColor,
           elevation: elevation
         ),
         child: isLoading
@@ -37,16 +43,31 @@ class VodanActionButton extends StatelessWidget {
                 width: 24, // Ukuran circular loading agar tidak membesarkan tombol
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
-                  // Jika foregroundColor null, biarkan CircularProgressIndicator 
-                  // mengikuti warna teks bawaan tema (onPrimary)
-                  color: foregroundColor ?? Theme.of(context).colorScheme.onPrimary,
+                  color: effectiveForegroundColor,
                 ),
               )
-            : Text(
-                text,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: foregroundColor ?? Theme.of(context).colorScheme.onPrimary
-                )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (prefixIcon != null) ...[
+                    Icon(prefixIcon, size: 20, color: effectiveForegroundColor),
+                    const SizedBox(width: 8), // Jarak antara ikon dan teks
+                  ],
+                  
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: effectiveForegroundColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  
+                  if (suffixIcon != null) ...[
+                    const SizedBox(width: 8), // Jarak antara teks dan ikon
+                    suffixIcon!,
+                  ],
+                ],
               ),
       ),
     );

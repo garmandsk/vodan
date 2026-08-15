@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
+import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
@@ -99,9 +100,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 subtitleStyle: Theme.of(context).textTheme.bodyMedium,
               ),
           
-              TextFormField(
+              VodanTextFormField(
+                labelText: 'Nama',
+                hintText: 'Udin Idun',
+                prefixIcon: Icons.person,
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nama', prefixIcon: Icon(Icons.person_outline)),
                 keyboardType: TextInputType.name,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -111,9 +114,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 },
               ),
       
-              TextFormField(
+              VodanTextFormField(
+                labelText: 'Email',
+                hintText: 'udin@email.com',
+                prefixIcon: Icons.email_outlined,
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -126,61 +131,59 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 },
               ),
       
-              TextFormField(
+              VodanTextFormField(
+                labelText: 'Kata Sandi',
+                hintText: '******',
+                prefixIcon: Icons.lock_clock_outlined,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordObscure
+                    ? Icons.visibility_off
+                    : Icons.visibility
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordObscure = !_isPasswordObscure;
+                    });
+                  },
+                ),
                 controller: _passwordController,
                 obscureText: _isPasswordObscure,
-                decoration: InputDecoration(
-                  labelText: 'Password', 
-                  prefixIcon: Icon(Icons.lock_clock_outlined),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordObscure
-                      ? Icons.visibility_off
-                      : Icons.visibility
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordObscure = !_isPasswordObscure;
-                      });
-                    },
-                  ) 
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Password tidak boleh kosong!';
+                    return 'Kata Sandi tidak boleh kosong!';
                   } 
                   if (value.length < 6) {
-                    return 'Password minimal 6 karakter';
+                    return 'Kata Sandi minimal 6 karakter';
                   }
                   return null;
                 },
               ),
       
-              TextFormField(
+              VodanTextFormField(
+                labelText: 'Konfirmasi Kata Sandi',
+                hintText: '******', 
+                prefixIcon: Icons.screen_lock_landscape_outlined,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isConfirmPasswordObscure
+                    ? Icons.visibility_off
+                    : Icons.visibility
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isConfirmPasswordObscure = !_isConfirmPasswordObscure;
+                    });
+                  },
+                ),
                 controller: _confirmPasswordController,
                 obscureText: _isConfirmPasswordObscure,
-                decoration: InputDecoration(
-                  labelText: 'Konfirmasi Password', 
-                  prefixIcon: Icon(Icons.screen_lock_landscape_outlined),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isConfirmPasswordObscure
-                      ? Icons.visibility_off
-                      : Icons.visibility
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isConfirmPasswordObscure = !_isConfirmPasswordObscure;
-                      });
-                    },
-                  )
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Konfirmasi Password tidak boleh kosong!';
+                    return 'Konfirmasi Kata Sandi tidak boleh kosong!';
                   }
                   if (value != _passwordController.text.trim()) {
-                    return 'Password tidak sama!';
+                    return 'Kata Sandi tidak sama!';
                   }
                   return null;
                 },

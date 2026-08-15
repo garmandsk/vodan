@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
@@ -7,14 +8,33 @@ import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
+import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 
-class WorkspaceCreatedScreen extends StatelessWidget {
+class WorkspaceCreatedScreen extends ConsumerStatefulWidget {
   const WorkspaceCreatedScreen({
     super.key,
     required this.workspaceId
   });
 
   final String workspaceId;
+
+  @override
+  ConsumerState<WorkspaceCreatedScreen> createState() => _WorkspaceCreatedScreenState();
+}
+
+class _WorkspaceCreatedScreenState extends ConsumerState<WorkspaceCreatedScreen> {
+  Future<void> _copy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: widget.workspaceId));
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('ID Lapak berhasil disalin! 📋'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      )
+    );
+  }
 
   Future<void> _openGoogleSheets() async {
     final Uri url = Uri.parse('https://docs.google.com/spreadsheets/d/1GZLnX5r6eAtcUiblTxxBSUeChDF0s96LRNWU2gDMaB4/copy');
@@ -24,9 +44,6 @@ class WorkspaceCreatedScreen extends StatelessWidget {
   }
 
   // void _enterWorkspace () {
-  //   WorkspaceRoute(workspaceId: workspaceId).go(context);
-  // }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -48,22 +65,14 @@ class WorkspaceCreatedScreen extends StatelessWidget {
               
               VodanActionCard(
                 title: 'ID Lapak Kamu', 
-                subtitle: workspaceId, 
+                subtitle: widget.workspaceId, 
                 prefixIcon: Icons.storefront_rounded,
-                suffixIcon: Icons.copy_rounded, 
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.copy_rounded),
+                  onPressed: () => _copy(context),
+                ), 
                 color: Theme.of(context).colorScheme.primary, 
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: workspaceId));
-        
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('ID Lapak berhasil disalin! 📋'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
-                    )
-                  );
-                },
+                onTap: () => _copy(context)
               ),
               
               VodanActionCard(
@@ -77,7 +86,10 @@ class WorkspaceCreatedScreen extends StatelessWidget {
               
               VodanActionButton(
                 text: 'Masuk ke Lapak', 
-                onPressed: () => WorkspaceRoute(workspaceId: workspaceId).go(context)
+                onPressed: () {
+                  ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(widget.workspaceId);
+                  PosRoute().go(context);
+                }
               ),
             ],
           ),

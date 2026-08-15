@@ -55,3 +55,28 @@ class EnterWorkspaceRoute extends GoRouteData with $EnterWorkspaceRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) => EnterWorkspaceScreen();
 }
+
+@TypedGoRoute<WorkspaceWaitingRoomRoute>(path: '/workspace/:workspaceId/waiting-room')
+class WorkspaceWaitingRoomRoute extends GoRouteData with $WorkspaceWaitingRoomRoute {
+  const WorkspaceWaitingRoomRoute({
+    required this.workspaceId,
+    required this.cashierName,
+  });
+
+  final String workspaceId;
+  final String cashierName;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => WorkspaceWaitingRoomScreen(workspaceId: workspaceId, cashierName: cashierName,);
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final sessionId = ProviderScope.containerOf(context).read(currentSessionIdProvider);
+
+    if (sessionId == null) {
+      return const EnterWorkspaceRoute().location;
+    }
+
+    return null;
+  }
+}

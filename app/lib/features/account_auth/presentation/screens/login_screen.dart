@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
+import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
@@ -52,7 +53,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (destination != null || destination!.isNotEmpty) {
         context.go(destination);
       } else {
-        const EnterWorkspaceRoute().go(context);
+        const LoginRoute().go(context);
       }
     }
   }
@@ -111,9 +112,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 titleStyle: Theme.of(context).textTheme.headlineMedium,
               ),
           
-              TextFormField(
+              VodanTextFormField(
+                labelText: 'Email',
+                hintText: 'udin@email.com',
+                prefixIcon: Icons.email_outlined,
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -126,14 +129,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               ),
       
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _isPasswordObscure,
-                keyboardType: TextInputType.visiblePassword,
-                decoration: InputDecoration(
-                  labelText: 'Password', 
-                  prefixIcon: Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
+              VodanTextFormField(
+                labelText: 'Kata Sandi',
+                hintText: '******',
+                prefixIcon: Icons.lock_outline,
+                suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordObscure
                       ? Icons.visibility_off
@@ -144,11 +144,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _isPasswordObscure = !_isPasswordObscure;
                       });
                     },
-                  )
-                ),
+                  ),
+                controller: _passwordController,
+                obscureText: _isPasswordObscure,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Password tidak boleh kosong!';
+                    return 'Kata Sandi tidak boleh kosong!';
                   } 
                   return null;
                 },

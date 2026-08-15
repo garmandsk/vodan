@@ -7,12 +7,19 @@ import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
 import 'package:vodan/features/workspace/presentation/controllers/workspace_controller.dart';
+import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 
-class WorkspaceListScreen extends ConsumerWidget {
+class WorkspaceListScreen extends ConsumerStatefulWidget {
   const WorkspaceListScreen({super.key});
 
+@override
+  ConsumerState<WorkspaceListScreen> createState() => _WorkspaceListScreenState();
+}
+
+class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final workspaces = ref.watch(workspaceControllerProvider);
 
     return VodanScaffold(
@@ -95,7 +102,10 @@ class WorkspaceListScreen extends ConsumerWidget {
           subtitle: workspace.id,
           prefixIcon: Icons.store_rounded,
           color: Theme.of(context).colorScheme.primary,
-          onTap: () => WorkspaceRoute(workspaceId: workspace.id).go(context),
+          onTap: () {
+            ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(workspace.id);
+            PosRoute().go(context);
+          } 
         );
       },
     );
