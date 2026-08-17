@@ -67,7 +67,7 @@ class WorkspaceWaitingRoomRoute extends GoRouteData with $WorkspaceWaitingRoomRo
   final String cashierName;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => WorkspaceWaitingRoomScreen(workspaceId: workspaceId, cashierName: cashierName,);
+  Widget build(BuildContext context, GoRouterState state) => WaitingRoomScreen(workspaceId: workspaceId, cashierName: cashierName,);
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {

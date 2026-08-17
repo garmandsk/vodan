@@ -1,35 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vodan/core/presentation/widgets/vodan_badge.dart';
+import 'package:vodan/features/account/data/repositories/account_repository.dart';
+import 'package:vodan/features/account/presentation/screens/profile_bottom_sheet.dart';
 
-class VodanScaffoldNavbar extends StatelessWidget {
-  const VodanScaffoldNavbar({
+class VodanMainScaffold extends ConsumerWidget {
+  const VodanMainScaffold({
     super.key,
     required this.navigationShell,
   });
 
-  // 🌟 Ini adalah objek sakti dari GoRouter yang menyimpan status (state) setiap tab
   final StatefulNavigationShell navigationShell;
 
   // Fungsi untuk berpindah tab
   void _goBranch(int index) {
     navigationShell.goBranch(
       index,
-      // A true boolean here ensures that if the user taps the active tab, 
-      // it resets the routing stack of that branch to its root.
-      // (Misal: Kasir sedang buka detail pesanan di tab Riwayat, 
-      // lalu menekan tombol Riwayat lagi, maka akan kembali ke daftar awal)
       initialLocation: index == navigationShell.currentIndex,
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    // 🌟 1. Deteksi Ukuran Layar (Adaptive Layout)
-    // Jika lebar layar >= 600 pixel, kita anggap ini Tablet / Web
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.sizeOf(context).width >= 600;
     final theme = Theme.of(context);
 
-    // 🌟 2. Daftar Menu (Konsisten antara Mobile & Web)
     final destinations = [
       const _NavigationDestination(
         icon: Icons.point_of_sale_outlined,
@@ -48,8 +44,31 @@ class VodanScaffoldNavbar extends StatelessWidget {
       ),
     ];
 
+    String currentTitle = 'POS';
+    if (navigationShell.currentIndex == 1) currentTitle = 'Riwayat Transaksi';
+    if (navigationShell.currentIndex == 2) currentTitle = 'Halaman Admin';
+
+     // Ambil data user dari repository
+
+    final user = ref.watch(accountRepositoryProvider).currentUser;
+
+    final name = user?.userMetadata?['name'] ?? user?.email?.split('@')[0] ?? 'Anonim';
+
     return Scaffold(
-      // 🌟 TAMPILAN TABLET / WEB
+      appBar: isDesktop
+          ? null // Desktop tidak pakai AppBar bawaan, tapi Header manual di Body
+          : AppBar(
+              title: Text(currentTitle),
+              automaticallyImplyLeading: false,
+              actions: [
+                if (!(name == 'Anonim'))
+                VodanBadge(
+                  text: name,
+                  radius: 18,
+                  onTap: () => ProfileBottomSheet.show(context),
+                ), // Avatar versi Mobile
+              ],
+            ),
       body: isDesktop
           ? Row(
               children: [
@@ -71,18 +90,14 @@ class VodanScaffoldNavbar extends StatelessWidget {
                     );
                   }).toList(),
                 ),
-                // Garis pemisah tipis
                 const VerticalDivider(thickness: 1, width: 1),
-                // Konten Tab (POS / Riwayat / Admin)
                 Expanded(child: navigationShell),
               ],
             )
-          // 🌟 TAMPILAN MOBILE (HP)
           : navigationShell,
 
-      // 🌟 BOTTOM BAR HANYA MUNCUL DI MOBILE
       bottomNavigationBar: isDesktop
-          ? null // Sembunyikan bottom bar di Desktop/Tablet
+          ? null 
           : NavigationBar(
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _goBranch,
@@ -100,7 +115,6 @@ class VodanScaffoldNavbar extends StatelessWidget {
   }
 }
 
-// Class bantuan sederhana untuk merapikan ikon & label
 class _NavigationDestination {
   final IconData icon;
   final IconData selectedIcon;

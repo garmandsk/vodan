@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:vodan/core/presentation/widgets/vodan_bottom_sheet.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_qr_scanner.dart';
@@ -37,16 +38,9 @@ class CashierEntry extends ConsumerStatefulWidget {
     String? initialWorkspaceId,
     String? initialCashierName,
   }) {
-    return showModalBottomSheet(
+    return VodanBottomSheet.show( // Memanggil Cangkang Utama
       context: context,
-      isScrollControlled: true, 
-      useSafeArea: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
-      ),
-      // Lempar parameter dari fungsi show() ke dalam Widget
-      builder: (context) => CashierEntry(
+      child: CashierEntry(
         title: title,
         subtitle: subtitle,
         submitButtonText: submitButtonText,
@@ -72,7 +66,6 @@ class _CashierEntryState extends ConsumerState<CashierEntry> {
   void _fetchDeviceId() async {
     final deviceInfo = DeviceInfoPlugin();
     String deviceId = 'Unknown Device';
-
     try {
       if (kIsWeb) {
         final webInfo = await deviceInfo.webBrowserInfo;
@@ -122,11 +115,10 @@ class _CashierEntryState extends ConsumerState<CashierEntry> {
 
       try {
         setState(() => _isSubmitting = true); 
-        
         await widget.onSubmit(workspaceId, cashierName);
 
         if (mounted){
-          Navigator.of(context).pop(); // Tutup popup otomatis jika sukses
+          Navigator.of(context).pop(); 
         }
       } catch (e) {
         if (mounted) {
@@ -144,7 +136,7 @@ class _CashierEntryState extends ConsumerState<CashierEntry> {
               actions: [
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: () => Navigator.pop(context), // Tutup dialog error
+                  onPressed: () => Navigator.pop(context), 
                   child: const Text('Tutup & Coba Lagi'),
                 ),
               ],
@@ -163,7 +155,6 @@ class _CashierEntryState extends ConsumerState<CashierEntry> {
     _workspaceIdController = TextEditingController(text: widget.initialWorkspaceId);
     _nameController = TextEditingController(text: widget.initialCashierName);
 
-    // Jika sedang dalam mode Edit (nama sudah ada), tidak perlu mencari Device ID lagi
     if (widget.initialCashierName != null && widget.initialCashierName!.isNotEmpty) {
       _isLoadingDeviceId = false;
     } else {
@@ -180,62 +171,57 @@ class _CashierEntryState extends ConsumerState<CashierEntry> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 16,
+        children: [
+          VodanHeader(
+            icon: Icons.point_of_sale_rounded,
+            title: widget.title, 
+            subtitle: widget.subtitle,
+          ),
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 24.0 + keyboardPadding),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 16,
-          children: [
-            VodanHeader(
-              icon: Icons.point_of_sale_rounded,
-              title: widget.title, 
-              subtitle: widget.subtitle,
+          VodanTextFormField(
+            controller: _workspaceIdController,
+            labelText: 'ID Lapak',
+            hintText: '123-abc-456-def-789',
+            prefixIcon: Icons.store_rounded,
+            prefixIconColor: Theme.of(context).colorScheme.secondary,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.qr_code_scanner_rounded),
+              onPressed: _scanQr
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'ID Lapak wajib diisi';
+              return null;
+            }
+          ),
 
-            VodanTextFormField(
-              controller: _workspaceIdController,
-              labelText: 'ID Lapak',
-              hintText: '123-abc-456-def-789',
-              prefixIcon: Icons.store_rounded,
-              prefixIconColor: Theme.of(context).colorScheme.secondary,
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.qr_code_scanner_rounded),
-                onPressed: _scanQr
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'ID Lapak wajib diisi';
-                return null;
-              }
-            ),
+          VodanTextFormField(
+            controller: _nameController,
+            enabled: !_isLoadingDeviceId,
+            labelText: 'Nama Kasir',
+            hintText: 'Kasir-Udin',
+            prefixIcon: Icons.badge_rounded,
+            prefixIconColor: Theme.of(context).colorScheme.tertiary,
+            suffixIcon: _isLoadingDeviceId
+                ? const Padding(padding: EdgeInsets.all(12.0), child: CircularProgressIndicator(strokeWidth: 2))
+                : null,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Nama tidak boleh kosong';
+              return null;
+            }
+          ),
 
-            VodanTextFormField(
-              controller: _nameController,
-              enabled: !_isLoadingDeviceId,
-              labelText: 'Nama Kasir',
-              hintText: 'Kasir-Udin',
-              prefixIcon: Icons.badge_rounded,
-              prefixIconColor: Theme.of(context).colorScheme.tertiary,
-              suffixIcon: _isLoadingDeviceId
-                  ? const Padding(padding: EdgeInsets.all(12.0), child: CircularProgressIndicator(strokeWidth: 2))
-                  : null,
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Nama tidak boleh kosong';
-                return null;
-              }
-            ),
-
-            VodanActionButton(
-              text: widget.submitButtonText, 
-              isLoading: _isLoadingDeviceId || _isSubmitting, 
-              onPressed: _submit
-            ),
-          ],
-        ),
+          VodanActionButton(
+            text: widget.submitButtonText, 
+            isLoading: _isLoadingDeviceId || _isSubmitting, 
+            onPressed: _submit
+          ),
+        ],
       ),
     );
   }

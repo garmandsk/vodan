@@ -103,8 +103,10 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
           prefixIcon: Icons.store_rounded,
           color: Theme.of(context).colorScheme.primary,
           onTap: () {
+            final instantSessionId = 'admin-session-${workspace.id}'; 
+            ref.read(currentSessionIdProvider.notifier).setSessionId(instantSessionId);
             ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(workspace.id);
-            PosRoute().go(context);
+            const PosRoute().go(context);
           } 
         );
       },

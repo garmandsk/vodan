@@ -7,8 +7,8 @@ import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
-import 'package:vodan/features/account_auth/data/models/login_request__model.dart';
-import '../controllers/account_auth_controller.dart';
+import 'package:vodan/features/account/data/models/login_request__model.dart';
+import '../controllers/account_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
@@ -31,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isPasswordObscure = true;
 
   void _submitLoginForm() {
-    final isLoading = ref.read(accountAuthControllerProvider).isLoading;
+    final isLoading = ref.read(accountControllerProvider).isLoading;
     if (isLoading) return;
 
     if (_formKey.currentState!.validate()) {
@@ -47,7 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       // jalankan proses login
-      ref.read(accountAuthControllerProvider.notifier).login(loginRequestData);
+      ref.read(accountControllerProvider.notifier).login(loginRequestData);
 
       final destination = widget.from;
       if (destination != null || destination!.isNotEmpty) {
@@ -68,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<void>>(
-      accountAuthControllerProvider,
+      accountControllerProvider,
       (_, state) {
         if (state.isLoading) return;
 
@@ -92,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     );
 
-    final isLoading = ref.watch(accountAuthControllerProvider).isLoading;
+    final isLoading = ref.watch(accountControllerProvider).isLoading;
 
     return VodanScaffold(
       title: 'Masuk ke VoDan',

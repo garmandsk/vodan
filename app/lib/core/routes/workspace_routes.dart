@@ -9,7 +9,6 @@ class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    // final supabase = ProviderScope.containerOf(context).read(supabaseClientProvider); 
     final session = Supabase.instance.client.auth.currentSession;
     final isLoggedIn = session != null;
 
@@ -23,18 +22,14 @@ class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
   }
 }
 
-// 🌟 1. CANGKANG UTAMA (SHELL ROUTE) BERISI TIGA TAB
 @TypedStatefulShellRoute<CashierShellRouteData>(
   branches: <TypedStatefulShellBranch<StatefulShellBranchData>>[
-    // Tab 0: POS
     TypedStatefulShellBranch<PosBranch>(routes: [
       TypedGoRoute<PosRoute>(path: '/pos')
     ]),
-    // Tab 1: Riwayat
     TypedStatefulShellBranch<HistoryBranch>(routes: [
       TypedGoRoute<HistoryRoute>(path: '/history')
     ]),
-    // Tab 2: Admin Gate
     TypedStatefulShellBranch<AdminGateBranch>(routes: [
       TypedGoRoute<AdminGateRoute>(path: '/admin-gate')
     ]),
@@ -43,13 +38,12 @@ class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
 class CashierShellRouteData extends StatefulShellRouteData {
   const CashierShellRouteData();
 
-  // "Satpam" penjaga tab (Opsional, tapi disarankan)
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final sessionId = ProviderScope.containerOf(context).read(currentSessionIdProvider);
+    final cashierSessionId = ProviderScope.containerOf(context).read(currentSessionIdProvider);
     
-    // Jika tidak punya sesi (mencoba tebak URL), tendang ke halaman awal
-    if (sessionId == null) {
+    if (cashierSessionId == null) {
+      print('cashier: $cashierSessionId');
       return const EnterWorkspaceRoute().location; 
     }
     return null;
@@ -57,17 +51,14 @@ class CashierShellRouteData extends StatefulShellRouteData {
 
   @override
   Widget builder(BuildContext context, GoRouterState state, StatefulNavigationShell navigationShell) {
-    // Memanggil widget cangkang pintar yang kita buat sebelumnya!
-    return VodanScaffoldNavbar(navigationShell: navigationShell);
+    return VodanMainScaffold(navigationShell: navigationShell);
   }
 }
 
-// 🌟 2. KELAS DEFINISI CABANG (BRANCHES)
 class PosBranch extends StatefulShellBranchData { const PosBranch(); }
 class HistoryBranch extends StatefulShellBranchData { const HistoryBranch(); }
 class AdminGateBranch extends StatefulShellBranchData { const AdminGateBranch(); }
 
-// 🌟 3. KELAS AKAR RUTE (ROUTES)
 class PosRoute extends GoRouteData with $PosRoute {
   const PosRoute();
 

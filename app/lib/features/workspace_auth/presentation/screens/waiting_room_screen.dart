@@ -9,8 +9,8 @@ import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart'; // Import tombol buatanmu!
 
-class WorkspaceWaitingRoomScreen extends ConsumerStatefulWidget {
-  const WorkspaceWaitingRoomScreen({
+class WaitingRoomScreen extends ConsumerStatefulWidget {
+  const WaitingRoomScreen({
     super.key,
     required this.workspaceId,
     required this.cashierName,
@@ -20,10 +20,10 @@ class WorkspaceWaitingRoomScreen extends ConsumerStatefulWidget {
   final String cashierName;
 
   @override
-  ConsumerState<WorkspaceWaitingRoomScreen> createState() => _WorkspaceWaitingRoomScreenState();
+  ConsumerState<WaitingRoomScreen> createState() => _WaitingRoomScreenState();
 }
 
-class _WorkspaceWaitingRoomScreenState extends ConsumerState<WorkspaceWaitingRoomScreen> {
+class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
   late String currentWorkspaceId;
   late String currentCashierName;
 
@@ -110,6 +110,18 @@ class _WorkspaceWaitingRoomScreenState extends ConsumerState<WorkspaceWaitingRoo
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    ref.listen(myStatusStreamProvider, (previous, next) {
+      next.whenData((statusData) {
+        final status = statusData['status'] ?? '';
+
+        if (status == 'approved') {
+          ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(currentWorkspaceId);
+
+          const PosRoute().go(context);
+        }
+      });
+    });
 
     final otherCashiersAsync = ref.watch(otherCashiersStreamProvider(workspaceId: widget.workspaceId));
 

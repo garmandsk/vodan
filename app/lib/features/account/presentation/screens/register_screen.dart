@@ -6,8 +6,8 @@ import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
-import 'package:vodan/features/account_auth/data/models/register_request_model.dart';
-import '../controllers/account_auth_controller.dart';
+import 'package:vodan/features/account/data/models/register_request_model.dart';
+import '../controllers/account_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -28,7 +28,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isConfirmPasswordObscure = true;
 
   void _submitRegisterForm() {
-    final isLoading = ref.read(accountAuthControllerProvider).isLoading;
+    final isLoading = ref.read(accountControllerProvider).isLoading;
     if (isLoading) return;
 
     if (_formKey.currentState!.validate()) {
@@ -38,7 +38,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         displayName: _nameController.text.trim()
       );
 
-      ref.read(accountAuthControllerProvider.notifier).register(registerRequestData);
+      ref.read(accountControllerProvider.notifier).register(registerRequestData);
       
       // Redirect ke login saat register berhasil
       LoginRoute().go(context);
@@ -57,7 +57,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<void>>(
-      accountAuthControllerProvider,
+      accountControllerProvider,
       (_, state) {
         if (state.isLoading) return;
 
@@ -78,7 +78,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     );
 
-    final authState = ref.watch(accountAuthControllerProvider);
+    final authState = ref.watch(accountControllerProvider);
     final isLoading = authState.isLoading;
 
     return VodanScaffold(

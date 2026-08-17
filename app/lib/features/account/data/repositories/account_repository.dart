@@ -1,16 +1,20 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
-import 'package:vodan/features/account_auth/data/models/account_response_model.dart';
-import 'package:vodan/features/account_auth/data/models/login_request__model.dart';
-import 'package:vodan/features/account_auth/data/models/register_request_model.dart';
+import 'package:vodan/features/account/data/models/account_response_model.dart';
+import 'package:vodan/features/account/data/models/login_request__model.dart';
+import 'package:vodan/features/account/data/models/register_request_model.dart';
 
-part 'account_auth_repository.g.dart';
+part 'account_repository.g.dart';
 
-class AccountAuthRepository {
-  AccountAuthRepository(this._supabase);
+class AccountRepository {
+  AccountRepository(this._supabase);
 
   final SupabaseClient _supabase;
+
+  Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+
+  User? get currentUser => _supabase.auth.currentUser;
 
   Future<AccountResponseModel> login({required LoginRequestModel data}) async {
     try {
@@ -53,12 +57,9 @@ class AccountAuthRepository {
   Future<void> logout() async {
     await _supabase.auth.signOut();
   }
-
-  // Stream untuk memantau sesi
-  Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 }
 
 @Riverpod(keepAlive: true)
-AccountAuthRepository accountAuthRepository(Ref ref) {
-  return AccountAuthRepository(ref.watch(supabaseClientProvider));
+AccountRepository accountRepository(Ref ref) {
+  return AccountRepository(ref.watch(supabaseClientProvider));
 }
