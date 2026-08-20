@@ -15,7 +15,7 @@ class CreateWorkspaceRoute extends GoRouteData with $CreateWorkspaceRoute {
 
     if (!isLoggedIn) {
       final fromPath = state.uri.toString();
-      print('fromPath: $fromPath');
+      // print('fromPath: $fromPath');
       return LoginRoute(from: fromPath).location;
     }
     return null;
@@ -71,7 +71,7 @@ class WorkspaceWaitingRoomRoute extends GoRouteData with $WorkspaceWaitingRoomRo
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final sessionId = ProviderScope.containerOf(context).read(currentSessionIdProvider);
+    final sessionId = ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
 
     if (sessionId == null) {
       return const EnterWorkspaceRoute().location;

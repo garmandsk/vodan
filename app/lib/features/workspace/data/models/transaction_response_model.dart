@@ -1,3 +1,5 @@
+import 'package:vodan/features/workspace/data/models/cart_item_model.dart';
+
 enum PaymentMethod {
   cash,
   qris,
@@ -10,54 +12,70 @@ enum TransactionStatus {
   rejected
 }
 
-class TransactionModel {
-  TransactionModel({
+class TransactionResponseModel {
+  TransactionResponseModel({
     required this.id,
     required this.workspaceId,
     required this.transactionTime,
     required this.items,
     required this.totalPrice,
+    required this.discount,
+    required this.currency,
     required this.paymentMethod,
     required this.cashierName,
     required this.status,
+    this.createdAt,
+    this.updatedAt
   });
 
   final String id;
   final String workspaceId;
   final DateTime transactionTime;
-  final List<dynamic> items;
-  final int totalPrice;
+  final List<CartItemModel> items;
+  final double totalPrice;
+  final double discount;
+  final String currency;
   final PaymentMethod paymentMethod;
   final String cashierName;
   final TransactionStatus status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
-  TransactionModel copyWith({
+  TransactionResponseModel copyWith({
     DateTime? transactionTime,
-    List<dynamic>? items,
-    int? totalPrice,
+    List<CartItemModel>? items,
+    double? totalPrice,
+    double? discount,
+    String? currency,
     PaymentMethod? paymentMethod,
     String? cashierName,
-    TransactionStatus? status
+    TransactionStatus? status,
   }) {
-    return TransactionModel(
+    return TransactionResponseModel(
       id: id,
       workspaceId: workspaceId,
       transactionTime: transactionTime ?? this.transactionTime,
       items: items ?? this.items,
       totalPrice: totalPrice ?? this.totalPrice,
+      discount: discount ?? this.discount,
+      currency: currency ?? this.currency,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       cashierName: cashierName ?? this.cashierName,
-      status: status ?? this.status
+      status: status ?? this.status,
     );
   }
 
-  factory TransactionModel.fromJson(Map<String, dynamic> json){
-    return TransactionModel(
+  factory TransactionResponseModel.fromJson(Map<String, dynamic> json){
+    return TransactionResponseModel(
       id: json['id'].toString(),
       workspaceId: json['workspace_id'].toString(),
       transactionTime: DateTime.parse(json['transaction_time']),
-      items: json['items'] ?? [],
-      totalPrice: (json['total_price'] ?? 0).toInt(),
+      items: (json['items'] as List<dynamic>?)
+          ?.map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
+      totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0.0,
+      discount: (json['discount'] as num?)?.toDouble() ?? 0.0,
+      currency: json['currency']?.toString() ?? 'IDR',
       paymentMethod: PaymentMethod.values.asNameMap()[json['payment_method']] ?? PaymentMethod.cash,
       cashierName: json['cashier_name'].toString(),
       status: TransactionStatus.values.asNameMap()[json['status']] ?? TransactionStatus.pending,
@@ -69,8 +87,10 @@ class TransactionModel {
       'id': id,
       'workspace_id': workspaceId,
       'transaction_time': transactionTime.toIso8601String(),
-      'items': items,
+      'items': items.map((e) => e.toJson()).toList(),
       'total_price': totalPrice,
+      'discount': discount,
+      'currency': currency,
       'payment_method': paymentMethod.name,
       'cashier_name': cashierName,
       'status': status.name,

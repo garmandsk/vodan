@@ -12,6 +12,8 @@ class VodanActionButton extends StatelessWidget {
     this.elevation,
     this.isLoading = false,
     required this.onPressed,
+    this.isExpanded = false,
+    this.extraInfo,
   });
 
   final double height;
@@ -23,6 +25,8 @@ class VodanActionButton extends StatelessWidget {
   final double? elevation;
   final VoidCallback? onPressed;
   final bool isLoading; 
+  final bool isExpanded;
+  final String? extraInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -30,43 +34,68 @@ class VodanActionButton extends StatelessWidget {
     
     return SizedBox(
       height: height,
+      width: isExpanded ? double.infinity : null,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed, 
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.primary,
           foregroundColor: effectiveForegroundColor,
-          elevation: elevation
+          elevation: elevation ?? (isExpanded ? 8 : 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isExpanded ? 20 : 16), 
+          ),
+          padding: EdgeInsets.symmetric(horizontal: isExpanded ? 24 : 16),
         ),
         child: isLoading
             ? SizedBox(
                 height: 24,
-                width: 24, // Ukuran circular loading agar tidak membesarkan tombol
+                width: 24, 
                 child: CircularProgressIndicator(
                   strokeWidth: 3.0,
                   color: effectiveForegroundColor,
                 ),
               )
             : Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: isExpanded ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: isExpanded ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
                 children: [
-                  if (prefixIcon != null) ...[
-                    Icon(prefixIcon, size: 20, color: effectiveForegroundColor),
-                    const SizedBox(width: 8), // Jarak antara ikon dan teks
-                  ],
-                  
-                  Text(
-                    text,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: effectiveForegroundColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  // --- BAGIAN KIRI (Icon + Teks Utama) ---
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (prefixIcon != null) ...[
+                        Icon(prefixIcon, size: 20, color: effectiveForegroundColor),
+                        const SizedBox(width: 8), 
+                      ],
+                      Text(
+                        text,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: effectiveForegroundColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  
-                  if (suffixIcon != null) ...[
-                    const SizedBox(width: 8), // Jarak antara teks dan ikon
-                    suffixIcon!,
-                  ],
+
+                  // --- BAGIAN KANAN (Info Tambahan + Suffix Icon) ---
+                  if (isExpanded || suffixIcon != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (extraInfo != null)
+                          Text(
+                            extraInfo!,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: effectiveForegroundColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        if (suffixIcon != null) ...[
+                          if (extraInfo != null) const SizedBox(width: 8), 
+                          suffixIcon!,
+                        ],
+                      ],
+                    ),
                 ],
               ),
       ),

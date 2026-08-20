@@ -5,10 +5,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
+import 'package:vodan/core/providers/session.dart';
 
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
-import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
+import 'package:vodan/features/account/presentation/controllers/account_controller.dart';
 
 class WorkspaceCreatedScreen extends ConsumerStatefulWidget {
   const WorkspaceCreatedScreen({
@@ -87,6 +88,12 @@ class _WorkspaceCreatedScreenState extends ConsumerState<WorkspaceCreatedScreen>
               VodanActionButton(
                 text: 'Masuk ke Lapak', 
                 onPressed: () {
+                  final name =
+                  ref.watch(getAccountProvider)?.userMetadata?['name'] ??
+                      'Anonim';
+                  // print('name: $name');
+                  final sessionId = 'admin-session-${widget.workspaceId}'; 
+                  ref.read(currentUserProvider.notifier).setSession(name: name, id: sessionId);
                   ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(widget.workspaceId);
                   PosRoute().go(context);
                 }

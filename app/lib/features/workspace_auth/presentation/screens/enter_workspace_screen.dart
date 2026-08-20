@@ -4,7 +4,7 @@ import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/routes/app_router.dart';
-import 'package:vodan/core/presentation/widgets/cashier_entry.dart';
+import 'package:vodan/core/presentation/widgets/cashier_bottom_sheet.dart';
 import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 // import 'package:vodan/core/routes/app_router.dart'; // Buka komentar ini nanti saat rutenya siap
 
@@ -46,7 +46,7 @@ class _EnterWorkspaceScreenState extends ConsumerState<EnterWorkspaceScreen> {
               subtitle: 'Mulai berjualan dan layani pelanggan.',
               prefixIcon: Icons.point_of_sale_rounded,
               color: Theme.of(context).colorScheme.tertiary,
-              onTap: () => CashierEntry.show(
+              onTap: () => CashierBottomSheet.show(
                 context: context,
                 title: 'Masuk Lapak', 
                 subtitle: 'Masukkan nama dan ID Lapak.', 

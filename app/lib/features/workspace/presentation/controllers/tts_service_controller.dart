@@ -1,10 +1,10 @@
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'tts_service.g.dart';
+part 'tts_service_controller.g.dart';
 
 @Riverpod(keepAlive: true)
-class TtsService extends _$TtsService {
+class TtsServiceController extends _$TtsServiceController {
   final FlutterTts _flutterTts = FlutterTts();
 
   // Memori untuk replay
@@ -23,6 +23,9 @@ class TtsService extends _$TtsService {
     await _flutterTts.awaitSpeakCompletion(true);
     await _flutterTts.setVolume(1.0);
 
+    final languages = await _flutterTts.getLanguages;
+    print('🗣️ Bahasa yang tersedia di Perangkat ini: $languages');
+
     _flutterTts.setStartHandler(() {
       state = true;
     });
@@ -37,12 +40,25 @@ class TtsService extends _$TtsService {
     });
   }
 
+  Future<List<String>> getAvailableLanguages() async {
+    try {
+      final languages = await _flutterTts.getLanguages;
+      final langList = List<String>.from(languages);
+      
+      if (langList.isEmpty) return ['id-ID', 'en-US']; 
+      return langList;
+    } catch (e) {
+      return ['id-ID', 'en-US'];
+    }
+  }
+
   Future<void> speak(
     String text, {
     String languageCode = 'id-ID',
     double pitch = 1.0,
-    double rate = 0.5,
+    double rate = 1.0,
   }) async {
+    // print("Berbicara: $text");
     try {
       await stop();
 
@@ -51,13 +67,25 @@ class TtsService extends _$TtsService {
       _lastPitch = pitch;
       _lastRate = rate;
 
-      final isAvailable = await _flutterTts.isLanguageAvailable(languageCode);
+      bool isAvailable = await _flutterTts.isLanguageAvailable(languageCode);
+      String finalLangCode = languageCode;
 
+      if (!isAvailable) {
+        List<dynamic> languages = await _flutterTts.getLanguages;
+        List<String> availableLanguage = List<String>.from(languages);
+
+        if (availableLanguage.isEmpty) {
+          isAvailable = false;
+        } else {
+          final result = await _flutterTts.setLanguage(availableLanguage[0]);
+          isAvailable = (result == 1 || result == true);
+        }
+      } 
+      
       if (isAvailable) {
-        await _flutterTts.setLanguage(languageCode);
+        await _flutterTts.setLanguage(finalLangCode);
       } else {
-        print("Bahasa $languageCode tidak didukung di HP ini. Fallback ke id-ID.");
-        await _flutterTts.setLanguage('id-ID');
+        print("Tidak ada bahasa yang didukung di Perangkat ini.");
       }
 
       await _flutterTts.setPitch(pitch);

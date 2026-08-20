@@ -18,10 +18,8 @@ class AccountRepository {
 
   Future<AccountResponseModel> login({required LoginRequestModel data}) async {
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: data.email,
-        password: data.password
-      );
+      final response = await _supabase.auth
+          .signInWithPassword(email: data.email, password: data.password);
 
       final user = response.user!;
       // final userData = await _supabase
@@ -29,12 +27,9 @@ class AccountRepository {
       //   .select()
       //   .eq('id', user.id)
       //   .single();
-      
+
       return AccountResponseModel(
-        id: user.id, 
-        email: user.email!,
-        displayName: user.userMetadata?['display_name']
-      );
+          id: user.id, email: user.email!, name: user.userMetadata?['name']);
     } catch (e) {
       throw Exception('Gagal login: $e');
     }
@@ -43,12 +38,9 @@ class AccountRepository {
   Future<void> register({required RegisterRequestModel data}) async {
     try {
       await _supabase.auth.signUp(
-        email: data.email,
-        password: data.password,
-        data: {
-          'display_name': data.displayName
-        }
-      );
+          email: data.email,
+          password: data.password,
+          data: {'name': data.name});
     } catch (e) {
       throw Exception('Gagal register: $e');
     }

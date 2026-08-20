@@ -4,13 +4,13 @@ import 'package:vodan/core/presentation/widgets/vodan_bottom_sheet.dart';
 import 'package:vodan/features/account/data/repositories/account_repository.dart';
 import 'package:vodan/features/account/presentation/controllers/account_controller.dart'; 
 
-class ProfileBottomSheet extends ConsumerWidget {
-  const ProfileBottomSheet({super.key});
+class AccountBottomSheet extends ConsumerWidget {
+  const AccountBottomSheet({super.key});
 
   static void show(BuildContext context) {
     VodanBottomSheet.show(
       context: context,
-      child: const ProfileBottomSheet(),
+      child: const AccountBottomSheet(),
     );
   }
 

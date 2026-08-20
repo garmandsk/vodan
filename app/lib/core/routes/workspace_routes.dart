@@ -14,7 +14,7 @@ class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
 
     if (!isLoggedIn) {
       final fromPath = state.uri.toString();
-      print('fromPath: $fromPath');
+      // print('fromPath: $fromPath');
       return LoginRoute(from: fromPath).location;
     }
 
@@ -40,10 +40,11 @@ class CashierShellRouteData extends StatefulShellRouteData {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final cashierSessionId = ProviderScope.containerOf(context).read(currentSessionIdProvider);
+    final workspaceId = ProviderScope.containerOf(context).read(currentWorkspaceIdProvider);
+    final cashierSessionId = ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
     
-    if (cashierSessionId == null) {
-      print('cashier: $cashierSessionId');
+    if (workspaceId == null || cashierSessionId == null) {
+      // print('cashier: $cashierSessionId');
       return const EnterWorkspaceRoute().location; 
     }
     return null;
@@ -78,4 +79,24 @@ class AdminGateRoute extends GoRouteData with $AdminGateRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => AdminGateScreen();
+}
+
+@TypedGoRoute<TransactionRoute>(path: '/transaction')
+class TransactionRoute extends GoRouteData with $TransactionRoute {
+  const TransactionRoute();
+
+  @override  
+  Widget build(BuildContext context, GoRouterState state) => TransactionScreen();
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final workspaceId = ProviderScope.containerOf(context).read(currentWorkspaceIdProvider);
+    final cashierSessionId = ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
+    
+    if (workspaceId == null || cashierSessionId == null) {
+      // print('cashier: $cashierSessionId');
+      return const EnterWorkspaceRoute().location; 
+    }
+    return null;
+  }
 }

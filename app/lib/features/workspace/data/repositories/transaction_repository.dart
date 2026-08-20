@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../models/transaction_model.dart';
+import 'package:vodan/features/workspace/data/models/transaction_request_model.dart';
+import '../models/transaction_response_model.dart';
 
 part 'transaction_repository.g.dart';
 
@@ -9,22 +10,22 @@ class TransactionRepository {
 
   final SupabaseClient _supabase;
 
-  Future<void> saveTransaction(TransactionModel transaction) async {
+  Future<void> createTransaction(TransactionRequestModel transaction) async {
     try {
-      await _supabase.from('transaction').insert(transaction.toJson());
+      await _supabase.from('transaction_log').insert(transaction.toJson());
     } catch (e) {
       throw Exception('Gagal menyimpan transaksi: $e');
     }
   }
 
-  Future<void> rejectTransaction(String transactionId) async {
+  Future<void> updateTransaction(String transactionId, TransactionStatus status) async {
     try {
       await _supabase
-          .from('transactions')
-          .update({'status': TransactionStatus.rejected.name})
+          .from('transaction_log')
+          .update({'status': status.name})
           .eq('id', transactionId);
     } catch (e) {
-      throw Exception('Gagal membatalkan transaksi: $e');
+      throw Exception('Gagal edit transaksi: $e');
     }
   }
 }

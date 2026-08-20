@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_badge.dart';
+import 'package:vodan/core/utils/responsive_utils.dart';
 import 'package:vodan/features/account/data/repositories/account_repository.dart';
-import 'package:vodan/features/account/presentation/screens/profile_bottom_sheet.dart';
+import 'package:vodan/core/presentation/widgets/account_bottom_sheet.dart';
 
 class VodanMainScaffold extends ConsumerWidget {
   const VodanMainScaffold({
@@ -23,7 +24,7 @@ class VodanMainScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 600;
+    final isDesktop = context.isDesktop || context.isTablet;
     final theme = Theme.of(context);
 
     final destinations = [
@@ -65,7 +66,7 @@ class VodanMainScaffold extends ConsumerWidget {
                 VodanBadge(
                   text: name,
                   radius: 18,
-                  onTap: () => ProfileBottomSheet.show(context),
+                  onTap: () => AccountBottomSheet.show(context),
                 ), // Avatar versi Mobile
               ],
             ),

@@ -6,14 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/presentation/widgets/vodan_main_scaffold.dart';
+import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
 import 'package:vodan/core/routes/error_routes.dart';
-import 'package:vodan/features/account/presentation/screens/profile_screen.dart';
+import 'package:vodan/features/account/presentation/screens/account_screen.dart';
 import 'package:vodan/features/workspace/presentation/screens/admin_gate_screen.dart';
+import 'package:vodan/features/workspace/presentation/screens/transaction_screen.dart';
 import 'package:vodan/features/workspace/presentation/screens/history_screen.dart';
 import 'package:vodan/features/workspace/presentation/screens/pos_screen.dart';
 import 'package:vodan/features/workspace/presentation/screens/workspace_list_screen.dart';
-import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 import 'package:vodan/features/workspace_auth/presentation/screens/enter_workspace_screen.dart';
 import 'package:vodan/features/workspace_auth/presentation/screens/waiting_room_screen.dart';
 

@@ -1,7 +1,26 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-part 'stt_service.g.dart';
+part 'stt_service_controller.g.dart';
+
+enum SpeechStatus {
+  listening('listening'),
+  notListening('notListening'),
+  done('done'),
+  error('error'),
+  unknown('');
+
+  final String value;
+  const SpeechStatus(this.value);
+
+  // Fungsi pengubah String dari package menjadi Enum
+  static SpeechStatus fromString(String val) {
+    return SpeechStatus.values.firstWhere(
+      (e) => e.value == val,
+      orElse: () => SpeechStatus.unknown,
+    );
+  }
+}
 
 class SpeechState {
   const SpeechState({
@@ -29,7 +48,7 @@ class SpeechState {
 
 // Menggunakan riverpod statefull
 @Riverpod(keepAlive: true)
-class SpeechController extends _$SpeechController {
+class SttServiceController extends _$SttServiceController {
   final stt.SpeechToText _speech = stt.SpeechToText();
 
   @override 
@@ -41,8 +60,9 @@ class SpeechController extends _$SpeechController {
   Future<void> _initSpeech() async {
     try {
       final available = await _speech.initialize(
-        onStatus: (status) {
-          if (status == 'notListening' || status == 'done') {
+        onStatus: (statusString) {
+          final status = SpeechStatus.fromString(statusString);
+          if (status == SpeechStatus.notListening || status == SpeechStatus.done) {
             state = state.copyWith(isListening: false);
           }
         },

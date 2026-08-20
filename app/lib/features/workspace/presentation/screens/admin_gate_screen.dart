@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
-import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
+import 'package:vodan/core/providers/session.dart';
 
 class AdminGateScreen extends ConsumerWidget {
   const AdminGateScreen({super.key});

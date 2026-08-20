@@ -1,14 +1,4 @@
 class ProductModel {
-  final String id;
-  final String workspaceId;
-  final String name;
-  final String category;
-  final List<String> nlpAlias;
-  final int price;
-  final int stock;
-  final int sold;
-  final bool isActive;
-
   ProductModel({
     required this.id,
     required this.workspaceId,
@@ -16,16 +6,29 @@ class ProductModel {
     required this.category,
     required this.nlpAlias,
     required this.price,
+    required this.currency,
     required this.stock,
     required this.sold,
     required this.isActive,
   });
 
+  final String id;
+  final String workspaceId;
+  final String name;
+  final String category;
+  final List<String> nlpAlias;
+  final double price;
+  final String currency;
+  final int stock;
+  final int sold;
+  final bool isActive;
+
   ProductModel copyWith({
     String? name,
     String? category,
     List<String>? nlpAlias,
-    int? price,
+    double? price,
+    String? currency,
     int? stock,
     int? sold,
     bool? isActive
@@ -37,6 +40,7 @@ class ProductModel {
       category: category ?? this.category,
       nlpAlias: nlpAlias ?? this.nlpAlias,
       price: price ?? this.price,
+      currency: currency ?? this.currency,
       stock: stock ?? this.stock,
       sold: sold ?? this.sold,
       isActive: isActive ?? this.isActive
@@ -50,7 +54,8 @@ class ProductModel {
       name: json['name'].toString(),
       category: json['category'].toString(),
       nlpAlias: List<String>.from(json['nlp_alias'] ?? []),
-      price: (json['price'] ?? 0).toInt(),
+      price: (json['price'] ?? 0).toDouble(),
+      currency: (json['currency'] as String),
       stock: json['stock'] ?? 0,
       sold: json['sold'] ?? 0,
       isActive: json['is_active'] ?? true,

@@ -51,8 +51,8 @@ class WaitingRoomRepository {
 
   // Validasi Tiket Akses Shift (QR Dinamis)
   Future<bool> validateShiftPass(String passCode, String workspaceId, String sessionId) async {
-    print('passcode: $passCode');
-    print('workspaceid: $workspaceId');
+    // print('passcode: $passCode');
+    // print('workspaceid: $workspaceId');
 
     try {
       final Map<String, dynamic>? response = await _supabase
@@ -64,22 +64,20 @@ class WaitingRoomRepository {
           .gte('expires_at', DateTime.now().toIso8601String()) 
           .maybeSingle();
 
-      print('📦 [DEBUG REPO] Hasil mentah dari Supabase: $response');
+      // print('📦 [DEBUG REPO] Hasil mentah dari Supabase: $response');
 
-      // 🌟 1. CEK NULL DULUAN (Wajib paling atas!)
       if (response == null) {
         // Jika null, berarti tiketnya antara tidak ada, beda Lapak, atau sudah kedaluwarsa
-        print('❌ [DEBUG REPO] Tiket GAGAL! Alasan: Tidak ditemukan / Beda Lapak / Kedaluwarsa.');
+        // print('❌ [DEBUG REPO] Tiket GAGAL! Alasan: Tidak ditemukan / Beda Lapak / Kedaluwarsa.');
         return false;
       } 
       
-      // 🌟 2. JIKA SAMPAI DI SINI, BERARTI TIKETNYA 100% VALID & AKTIF
       await _supabase.from('cashier_queue').update({'status': 'approved'}).eq('id', sessionId);
-      print('✅ [DEBUG REPO] Tiket VALID! Status kasir diubah jadi approved.');
+      // print('✅ [DEBUG REPO] Tiket VALID! Status kasir diubah jadi approved.');
       return true;
 
     } catch (e) {
-      print('🚨 [DEBUG REPO] ERROR FATAL: $e');
+      // print('🚨 [DEBUG REPO] ERROR FATAL: $e');
       return false;
     }
   }

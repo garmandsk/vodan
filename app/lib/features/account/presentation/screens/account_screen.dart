@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vodan/features/account/data/repositories/account_repository.dart';
-import 'package:vodan/features/account/presentation/screens/profile_bottom_sheet.dart';
+import 'package:vodan/core/presentation/widgets/account_bottom_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -22,7 +22,7 @@ class ProfileScreen extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               // Panggil Bottom Sheet saat ditekan
-              onTap: () => ProfileBottomSheet.show(context), 
+              onTap: () => AccountBottomSheet.show(context), 
               child: CircleAvatar(
                 radius: 18,
                 backgroundColor: Theme.of(context).colorScheme.primary,

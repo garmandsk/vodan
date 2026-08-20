@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
+import 'package:vodan/core/presentation/widgets/vodan_dropdown.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
@@ -56,7 +57,7 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
       );
 
       final String? newWorkspaceId = await ref.read(workspaceAuthControllerProvider.notifier).createWorkspace(requestData);
-      print('Workspace iD Baru: $newWorkspaceId');
+      // print('Workspace iD Baru: $newWorkspaceId');
       
       // redirect ke halaman sukses pembuatan lapak
       if (newWorkspaceId != null && mounted) {
@@ -180,21 +181,19 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 12,
                     children: [
                       Expanded(
-                        flex: 2,
-                        child: DropdownButtonFormField<String>(
-                          initialValue: row.provider,
-                          decoration: const InputDecoration(
-                            labelText: 'Provider',
-                            prefixIcon: Icon(Icons.assistant)
-                          ),
+                        child: VodanDropdown(
+                          initialValue: row.provider, 
+                          labelText: 'Provider', 
+                          icon: Icons.assistant, 
                           items: const [
                             DropdownMenuItem(value: 'Gemini', child: Text('Gemini')),
                             DropdownMenuItem(value: 'OpenAI', child: Text('OpenAI (Segera)')),
                             DropdownMenuItem(value: 'Claude', child: Text('Claude (Segera)')),
-                          ],
-                          onChanged: isLoading ? null: (value) {
+                          ], 
+                          onChanged: isLoading ? null : (value) {
                             if (value != 'Gemini') {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -203,20 +202,19 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                                   duration: const Duration(seconds: 2),
                                 )
                               );
-      
+                            
                               setState(() {
                                 row.provider = 'Gemini';
                               });
                               return;
                             }
-      
+                            
                             setState(() {
                               row.provider = value!;
                             });
                           }
-                        )
+                        ),
                       ),
-                      const SizedBox(width: 12,),
       
                       Expanded(
                         flex: 3,

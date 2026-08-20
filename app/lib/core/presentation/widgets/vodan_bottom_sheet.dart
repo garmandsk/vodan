@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 
 class VodanBottomSheet extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-
   const VodanBottomSheet({
     super.key,
     required this.child,
     this.padding,
+    this.isDismissible,
   });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final bool? isDismissible;
 
   static Future<T?> show<T>({
     required BuildContext context,
     required Widget child,
     bool isScrollControlled = true,
+    bool isDismissible = true
   }) {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
+      isDismissible: isDismissible,
       useSafeArea: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
@@ -36,10 +40,9 @@ class VodanBottomSheet extends StatelessWidget {
     return Padding(
       padding: padding ?? EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 24.0 + keyboardPadding),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Tinggi menyesuaikan isi anak
+        mainAxisSize: MainAxisSize.min, 
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 🌟 Garis Penarik (Grabber) yang selalu konsisten
           Center(
             child: Container(
               width: 40,

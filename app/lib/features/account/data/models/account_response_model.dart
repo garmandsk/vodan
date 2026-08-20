@@ -2,18 +2,18 @@ class AccountResponseModel {
   AccountResponseModel({
     required this.id,
     required this.email,
-    this.displayName,
+    this.name,
   });
 
   final String id;
   final String email;
-  final String? displayName;
+  final String? name;
 
   factory AccountResponseModel.fromJson(Map<String, dynamic> json) {
     return AccountResponseModel(
-      id: json['id'].toString(), 
+      id: json['id'].toString(),
       email: json['email'].toString(),
-      displayName: json['display_name'].toString(),
+      name: json['name'].toString(),
     );
-  } 
+  }
 }

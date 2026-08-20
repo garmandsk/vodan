@@ -38,8 +38,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final String email = _emailController.text.trim();
       final String password = _passwordController.text.trim();
 
-      print('email: $email');
-      print('password: $password');
+      // print('email: $email');
+      // print('password: $password');
 
       final loginRequestData = LoginRequestModel(
         email: email, 

@@ -4,20 +4,21 @@ import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
+import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
+import 'package:vodan/features/account/presentation/controllers/account_controller.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
 import 'package:vodan/features/workspace/presentation/controllers/workspace_controller.dart';
-import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 
 class WorkspaceListScreen extends ConsumerStatefulWidget {
   const WorkspaceListScreen({super.key});
 
-@override
-  ConsumerState<WorkspaceListScreen> createState() => _WorkspaceListScreenState();
+  @override
+  ConsumerState<WorkspaceListScreen> createState() =>
+      _WorkspaceListScreenState();
 }
 
 class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
-
   @override
   Widget build(BuildContext context) {
     final workspaces = ref.watch(workspaceControllerProvider);
@@ -32,11 +33,10 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
           spacing: 16,
           children: [
             VodanHeader(
-              icon: Icons.store_mall_directory_rounded, 
+              icon: Icons.store_mall_directory_rounded,
               title: 'Lapak Saya',
               subtitle: 'Gasken',
             ),
-        
             Expanded(
               child: workspaces.when(
                 data: (workspaces) {
@@ -70,45 +70,51 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
           VodanHeader(
             icon: Icons.storefront_outlined,
             iconSize: 100,
-            iconColor: Colors.grey.shade400, 
+            iconColor: Colors.grey.shade400,
             title: 'Belum ada lapak',
             titleStyle: Theme.of(context).textTheme.headlineMedium,
-            subtitle: 'Buat lapak pertamamu sekarang untuk mulai mengelola transaksi.',
+            subtitle:
+                'Buat lapak pertamamu sekarang untuk mulai mengelola transaksi.',
           ),
           const SizedBox(height: 16),
-      
           VodanActionButton(
-            text: 'Buka Lapak Sekarang',
-            onPressed: () => CreateWorkspaceRoute().go(context)
-          ),
+              text: 'Buka Lapak Sekarang',
+              onPressed: () => CreateWorkspaceRoute().go(context)),
         ],
       ),
     );
   }
 
-  // --- 🌟 DAFTAR LAPAK (LIST VIEW) ---
   Widget _buildWorkspaceList(List<WorkspaceResponseModel> workspaces) {
     // Wajib pakai ListView.builder agar aman dari lag saat lapaknya banyak
     return ListView.separated(
       // padding: const EdgeInsets.all(16.0),
       itemCount: workspaces.length,
-      separatorBuilder: (content, index) => const SizedBox(height: 16,),
+      separatorBuilder: (content, index) => const SizedBox(
+        height: 16,
+      ),
       itemBuilder: (context, index) {
         final workspace = workspaces[index];
-        
-        return 
-        VodanActionCard(
-          title: 'Lapak ${workspace.name}',
-          subtitle: workspace.id,
-          prefixIcon: Icons.store_rounded,
-          color: Theme.of(context).colorScheme.primary,
-          onTap: () {
-            final instantSessionId = 'admin-session-${workspace.id}'; 
-            ref.read(currentSessionIdProvider.notifier).setSessionId(instantSessionId);
-            ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(workspace.id);
-            const PosRoute().go(context);
-          } 
-        );
+
+        return VodanActionCard(
+            title: 'Lapak ${workspace.name}',
+            subtitle: workspace.id,
+            prefixIcon: Icons.store_rounded,
+            color: Theme.of(context).colorScheme.primary,
+            onTap: () {
+              final name =
+                  ref.watch(getAccountProvider)?.userMetadata?['name'] ??
+                      'Anonim';
+              // print('name: $name');
+              final sessionId = 'admin-session-${workspace.id}';
+              ref
+                  .read(currentUserProvider.notifier)
+                  .setSession(name: name, id: sessionId);
+              ref
+                  .read(currentWorkspaceIdProvider.notifier)
+                  .setWorkspaceId(workspace.id);
+              const PosRoute().go(context);
+            });
       },
     );
   }

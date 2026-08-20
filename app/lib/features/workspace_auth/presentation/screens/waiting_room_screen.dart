@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vodan/core/presentation/widgets/cashier_entry.dart';
+import 'package:vodan/core/presentation/widgets/cashier_bottom_sheet.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_qr_scanner.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
+import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart'; // Import tombol buatanmu!
 
@@ -36,7 +37,7 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
   }
 
   void _editCredentials() {
-    CashierEntry.show(
+    CashierBottomSheet.show(
       context: context,
       title: 'Edit Data', 
       subtitle: 'Perbarui nama atau pindah ID Lapak.', 
@@ -48,7 +49,7 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
         await ref.read(waitingRoomControllerProvider.notifier).editData(newCashierName, newWorkspaceId);
     
         // 2. Tampilkan notifikasi sukses
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Data berhasil diperbarui!'), backgroundColor: Colors.green)
           );
@@ -75,7 +76,7 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
 
     if (scannedResult != null && scannedResult.isNotEmpty) {
       String passCode = scannedResult;
-      print('passcode: $passCode');
+      // print('passcode: $passCode');
       
       try {
         final isValid = await ref.read(waitingRoomControllerProvider.notifier).scanTicket(passCode, currentWorkspaceId);

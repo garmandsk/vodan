@@ -11,7 +11,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { workspace_id, voice_text } = await req.json()
+    const { workspace_id, voice_text, available_languages } = await req.json()
     if (!workspace_id || !voice_text) throw new Error("Data tidak lengkap")
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -19,26 +19,46 @@ serve(async (req) => {
     const supabase = createClient<Database>(supabaseUrl, supabaseServiceRoleKey);
 
     // 1. Tarik Data Workspace & Katalog Menu
-    const { data: workspaceData } = await supabase.from('workspaces').select('ai_keys').eq('id', workspace_id).single()
-    const { data: menuData } = await supabase.from('products').select('id, name, price, nlp_alias').eq('workspace_id', workspace_id).eq('is_active', true)
+    const { data: workspaceData } = await supabase
+        .from('workspaces')
+        .select('ai_keys')
+        .eq('id', workspace_id)
+        .single();
+
+    const { data: productData } = await supabase
+        .from('products')
+        .select('id, name, nlp_alias, price, stock, sold')
+        .eq('workspace_id', workspace_id)
+        .eq('is_active', true);
     
     if (!workspaceData) throw new Error("Workspace tidak ditemukan")
     
     const aiKeys = workspaceData.ai_keys
     if (!aiKeys || aiKeys.length === 0) throw new Error("AI Key tidak ditemukan.")
 
+    const supportedLanguages = (available_languages && available_languages.length > 0)
+        ? available_languages.join(", ")
+        : "id-ID, en-US";
+
     // 2. Siapkan System Prompt
     const systemPrompt = `
-      You are an AI Cashier. Extract the orders from voice text to JSON format.
-      Menu List: ${JSON.stringify(menuData)}.
+      You are an AI Cashier. Analyze the 'voice_text' to extract orders to JSON format and determine the user's intent.
+      Menu List: ${JSON.stringify(productData)}.
 
       Rules:
-      1. Match the product with 'nlp_alias' or 'name'.
-      2. Make 'voice_response' (max 15 words) matching the style, tone, and personality of the fiction character mentioned.
-      3. Define the speech configuration in 'tts_config' (pitch: 0.1-2.0, rate: 0.1-1.0).
-      4. NATIVE LANGUAGE ENFORCEMENT: The 'voice_response' MUST be written entirely in the character's native language. For Japanese anime characters, you MUST generate the text using actual Japanese script (Kanji/Hiragana/Katakana), NOT English translations. ONLY the menu item name remains in Indonesian.
-      5. The 'language_code' MUST accurately reflect the script generated in 'voice_response' (e.g., use 'ja-JP' ONLY if the text is in Japanese script, 'en-US' for English).
-      6. MENTIONING PRICE: You MUST include the exact placeholder [TOTAL_PRICE] in your 'voice_response' where the total price should be spoken. DO NOT calculate the math yourself. Example: "Pesanan siap! Totalnya [TOTAL_PRICE] ya."
+      1. CLASSIFY INTENT: 
+         - If the user is just greeting, making small talk, or asking non-order questions, set 'intent' to "chat".
+         - If the user is ordering items from the menu, set 'intent' to "transaction".
+      2. Match the product with 'nlp_alias' or 'name' ONLY if intent is "transaction". If "chat" or there is no product matched, leave the orders array empty.
+      3. Make 'voice_response' (max 15 words) matching the style, tone, and personality of the fiction character mentioned. If nothing mentioned, create normal response with indonesian language.
+      4. Define the speech configuration in 'tts_config' (pitch: 0.1-2.0, rate: 0.1-1.0).
+      5. NATIVE LANGUAGE ENFORCEMENT: The 'voice_response' MUST be written entirely in the character's native language. For Japanese anime characters, you MUST generate the text using actual Japanese script (Kanji/Hiragana/Katakana), NOT English translations. ONLY the menu item name remains in Indonesian.
+      6. TTS LANGUAGE LIMITATION (CRITICAL): 
+         The user's device ONLY supports these TTS language codes: [${supportedLanguages}].
+         - You MUST choose a 'language_code' strictly from that list.
+         - If the character's native language (e.g., Japanese/ja-JP) is NOT in the list, DO NOT write the 'voice_response' in their native script. Instead, adapt their personality, catchphrases, and tone into Indonesian (id-ID) or English (en-US) depending on what is available in the list.
+      7. MENTIONING PRICE: If intent is "transaction", you MUST include the exact placeholder [TOTAL_PRICE] in your 'voice_response' where the total price should be spoken. DO NOT calculate the math yourself. Example: "Pesanan siap! Totalnya [TOTAL_PRICE] ya. If intent is "chat", DO NOT include [TOTAL_PRICE] or mention any price."
+      8. Create fallback response with example like this "Maaf, sistem sedang sibuk. Tolong ulangi pesanan." that matched the supported tts language codes.
     `;
 
     // 3. MESIN LOAD BALANCER & FALLBACK
@@ -50,6 +70,7 @@ serve(async (req) => {
       const provider = keyObj.provider.toLowerCase();
       // console.log('provider: ' + provider);
       // console.log('key: ' + keyObj.key);
+      // console.log(`Provider: ${provider}, Key: ${keyObj.key ? 'ADA (Tiga Huruf Awal: ' + keyObj.key.substring(0,3) + ')' : 'KOSONG/UNDEFINED'}`);
 
       try {
         if (provider === 'gemini') {
@@ -97,6 +118,11 @@ serve(async (req) => {
                     responseSchema: {
                       type: "object",
                       properties: {
+                        intent: {
+                          type: "string",
+                          description: "The intent of the user. Must be strictly 'chat' or 'transaction'",
+                          enum: ["chat", "transaction"]
+                        },
                         orders: {
                           type: "array",
                           description: "orders from the voice text",
@@ -113,6 +139,10 @@ serve(async (req) => {
                           type: "string",
                           description: "voice response of the character mentioned signaturely"
                         },
+                        fallback_response: {
+                          type: "string",
+                          description: "fallback response that matched the supported language codes"
+                        },
                         tts_config: {
                           type: "object",
                           properties: {
@@ -123,7 +153,7 @@ serve(async (req) => {
                           required: ["language_code", "pitch", "rate"]
                         }
                       },
-                      required: ["orders", "voice_response", "tts_config"]
+                      required: ["intent", "orders", "voice_response", "fallback_response", "tts_config"]
                     }
                   }
                  })
@@ -175,42 +205,69 @@ serve(async (req) => {
       throw new Error(`Sistem AI Sedang Sibuk atau Kuota Lapak Habis. (Error Terakhir: ${lastErrorMessage})`);
     }
 
-    if (finalJsonData.orders && Array.isArray(finalJsonData.orders)) {
-      let totalPrice = 0;
+    if (finalJsonData.intent === 'transaction'){
+      if  (finalJsonData.orders && Array.isArray(finalJsonData.orders)) {
+        let totalPrice = 0;
+        let isStockAdjusted = false;
 
-      finalJsonData.orders = finalJsonData.orders.map((order: any) => {
-        const product = menuData.find((p: any) => p.id === order.id);
+        finalJsonData.orders = finalJsonData.orders.map((order: any) => {
+          const product = productData.find((p: any) => p.id === order.id);
 
-        if (product && product.price) {
-          const subTotal = product.price * order.qty;
-          totalPrice += subTotal;
+          if (product && product.price) {
+            const availableStock = product.stock - product.sold;
 
-          // Konstruk items
-          return {
-            id: order.id,
-            name: product.name,
-            price: product.price,
-            qty: order.qty,
-            subTotal: subTotal
-          };
+            if (availableStock <= 0) {
+              isStockAdjusted = true;
+              return null;
+            }
+
+            let finalQty = order.qty;
+            if (finalQty > availableStock) {
+              finalQty = availableStock;
+              isStockAdjusted = true;
+            }
+
+            const subTotal = product.price * finalQty;
+            totalPrice += subTotal;
+
+            // Konstruk items
+            return {
+              id: order.id,
+              name: product.name,
+              price: product.price,
+              qty: finalQty,
+              subTotal: subTotal
+            };
+          }
+
+          // Fallback jika produk tidak ditemukan
+          return null;
+        }).filter((item: any) => item != null);
+
+        // Penambahan key & Value totalPrice ke data json
+        finalJsonData.total_price = totalPrice;
+
+        // Penambahan key & value isStockAdjusted
+        finalJsonData.is_stock_adjusted = isStockAdjusted;
+
+        // Respons total price yang dibaca flutter tts nant
+        const aiLangCode = finalJsonData.tts_config?.language_code || 'id-ID';
+        const formattedPrice = totalPrice.toLocaleString(aiLangCode);
+        const totalPriceResponse = `${formattedPrice} rupiah`;
+
+        if (finalJsonData.voice_response.includes('[TOTAL_PRICE]')) {
+          finalJsonData.voice_response = finalJsonData.voice_response.replace('[TOTAL_PRICE]', totalPriceResponse);
+        } else {
+          finalJsonData.voice_response += ` Totalnya ${totalPriceResponse}.`;
         }
-
-        // Fallback jika produk tidak ditemukan
-        return order;
-      });
-
-      // Penambahan key & Value totalPrice ke data json
-      finalJsonData.total_price = totalPrice;
-
-      // Respons total price yang dibaca flutter tts nanti
-      const totalPriceResponse = `${totalPrice.toLocaleString('id-ID')} rupiah`;
-
-      if (finalJsonData.voice_response.includes('[TOTAL_PRICE]')) {
-        finalJsonData.voice_response = finalJsonData.voice_response.replace('[TOTAL_PRICE]', totalPriceResponse);
-      } else {
-        finalJsonData.voice_response += ` Totalnya ${totalPriceResponse}.`;
       }
+    } else {
+      finalJsonData.orders = [];
+      finalJsonData.total_price = 0;
+      finalJsonData.is_stock_adjusted = false;
     }
+
+    console.log("Voice transaction selesai");
 
     // 5. Kembalikan ke Flutter
     return new Response(

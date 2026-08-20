@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../data/models/cart_item_model.dart';
-import '../../../../data/models/product_model.dart';
+import 'package:vodan/features/workspace/data/models/voice_transaction_response_model.dart';
+import '../../data/models/cart_item_model.dart';
+import '../../data/models/product_model.dart';
 
 part 'cart_controller.g.dart';
 
@@ -11,12 +12,12 @@ class CartController extends _$CartController {
     return [];
   }
 
-  void addAiOrders(List<dynamic> aiOrders, List<ProductModel> catalog) {
+  void addAiOrders(List<VoiceOrderItem> aiOrders, List<ProductModel> catalog) {
     var currentState = state;
 
     for (final order in aiOrders) {
-      final productId = order['id'] as String;
-      final qty = order['qty'] as int;
+      final productId = order.id;
+      final qty = order.qty;
 
       final productMatch = catalog.where((p) => p.id == productId).firstOrNull;
       if (productMatch == null) continue;
@@ -55,36 +56,50 @@ class CartController extends _$CartController {
     }
   }
 
-  void updateQuantity(String productId, int quantity) {
+  void updateQuantity( ProductModel product, int quantity) {
     if (quantity <= 0) {
-      state = state.where((item) => item.product.id != productId).toList();
+      state = state.where((item) => item.product.id != product.id).toList();
       return;
     }
 
-    state = [
-      for (final item in state)
-        if (item.product.id == productId)
-          item.copyWith(quantity: quantity)
-        else
-          item
-    ];
+    final isExist = state.any((item) => item.product.id == product.id);
+
+    if (isExist) {
+      state = [
+        for (final item in state)
+          if (item.product.id == product.id)
+            item.copyWith(quantity: quantity)
+          else
+            item
+      ];
+    } else {
+      state = [
+        ...state,
+        CartItemModel(product: product, quantity: quantity)
+      ];
+    }
   }
 
-  void setOverridePrice(String productId, int newPrice) {
-    state = [
-      for (final item in state)
-        if (item.product.id == productId)
-          item.copyWith(overridePrice: newPrice)
-        else
-          item
-    ];
+  void setOverridePrice(ProductModel product, double newPrice) {
+
+    final isExist = state.any((item) => item.product.id == product.id);
+
+    if (isExist) {
+      state = [
+        for (final item in state)
+          if (item.product.id == product.id)
+            item.copyWith(overridePrice: newPrice)
+          else
+            item
+      ];
+    }
   }
 
   void clearCart() {
     state = [];
   }
 
-  int get totalAmount {
+  num get totalAmount {
     return state.fold(0, (sum, item) => sum + item.totalPrice);
   }
 }

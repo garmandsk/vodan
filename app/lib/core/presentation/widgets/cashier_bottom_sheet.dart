@@ -6,11 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:vodan/core/presentation/widgets/vodan_bottom_sheet.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
+import 'package:vodan/core/presentation/widgets/vodan_dialog.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_qr_scanner.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 
-class CashierEntry extends ConsumerStatefulWidget {
+class CashierBottomSheet extends ConsumerStatefulWidget {
   final String title;
   final String subtitle;
   final String submitButtonText;
@@ -19,7 +20,7 @@ class CashierEntry extends ConsumerStatefulWidget {
   
   final Future<void> Function(String workspaceId, String cashierName) onSubmit;
 
-  const CashierEntry({
+  const CashierBottomSheet({
     super.key,
     required this.title,
     required this.subtitle,
@@ -40,7 +41,7 @@ class CashierEntry extends ConsumerStatefulWidget {
   }) {
     return VodanBottomSheet.show( // Memanggil Cangkang Utama
       context: context,
-      child: CashierEntry(
+      child: CashierBottomSheet(
         title: title,
         subtitle: subtitle,
         submitButtonText: submitButtonText,
@@ -52,10 +53,10 @@ class CashierEntry extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<CashierEntry> createState() => _CashierEntryState();
+  ConsumerState<CashierBottomSheet> createState() => _CashierBottomSheetState();
 }
 
-class _CashierEntryState extends ConsumerState<CashierEntry> {
+class _CashierBottomSheetState extends ConsumerState<CashierBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _workspaceIdController;
   late TextEditingController _nameController;
@@ -122,25 +123,10 @@ class _CashierEntryState extends ConsumerState<CashierEntry> {
         }
       } catch (e) {
         if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              icon: const Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
-              title: const Text('Gagal Masuk Lapak'),
-              content: Text(
-                'Tidak dapat menemukan Lapak dengan ID tersebut atau terjadi kesalahan jaringan.\n\nDetail: $e',
-                textAlign: TextAlign.center,
-              ),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: () => Navigator.pop(context), 
-                  child: const Text('Tutup & Coba Lagi'),
-                ),
-              ],
-            ),
+          VodanDialog.show(
+            context: context, 
+            title: 'Gagal Masuk Lapak', 
+            message: 'Tidak dapat menemukan Lapak dengan ID tersebut atau terjadi kesalahan jaringan.\n\nDetail: $e'
           );
         }
       } finally {

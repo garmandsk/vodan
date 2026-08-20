@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/features/account/data/models/login_request__model.dart';
 import 'package:vodan/features/account/data/models/register_request_model.dart';
 import '../../data/repositories/account_repository.dart';
@@ -51,7 +52,14 @@ class AccountController extends _$AccountController {
       final repo = ref.read(accountRepositoryProvider);
       await repo.logout();
     } catch (e) {
-      print('Gagal logout: $e');
+      // print('Gagal logout: $e');
     }
   }
+}
+
+@Riverpod(keepAlive: true)
+User? getAccount(Ref ref) {
+  final repo = ref.watch(accountRepositoryProvider);
+  // print(repo.currentUser);
+  return repo.currentUser; 
 }
