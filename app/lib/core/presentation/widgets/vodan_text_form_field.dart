@@ -16,6 +16,7 @@ class VodanTextFormField extends StatelessWidget {
     this.textInputAction,
     this.validator,
     this.onChanged,
+    this.onSubmitted,
     this.enabled = true,
     this.maxLines = 1,
     this.inputFormatters,
@@ -33,6 +34,7 @@ class VodanTextFormField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final bool enabled;
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
@@ -49,15 +51,27 @@ class VodanTextFormField extends StatelessWidget {
       enabled: enabled,
       maxLines: maxLines,
       inputFormatters: inputFormatters ?? [],
+      textAlignVertical: TextAlignVertical.center,
       
      decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        prefixIcon: Icon(
-          prefixIcon, 
-          color: prefixIconColor ?? Theme.of(context).colorScheme.onSurface,
-        ),
-        suffixIcon: suffixIcon
+        prefixIcon: prefixIcon != null
+            ? SizedBox(
+              width: 48,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    prefixIcon, 
+                    color: prefixIconColor ?? Theme.of(context).colorScheme.onSurface,
+                  ),
+                ],
+              ),
+            )
+            : null,
+        suffixIcon: suffixIcon,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14)
       ),
     );
   }

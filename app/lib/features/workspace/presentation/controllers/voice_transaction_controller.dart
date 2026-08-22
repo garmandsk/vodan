@@ -21,17 +21,42 @@ class VoiceTransactionController extends _$VoiceTransactionController {
   }
 
   Future<void> startRecording() async {
+    print('Mulai ngomong');
+    if (state == VoiceState.listening) return;
+
     state = VoiceState.listening;
     await ref.read(sttServiceControllerProvider.notifier).startListening();
   }
 
   Future<void> stopAndProcess(String workspaceId) async {
+    print('Tombol dilepas, bersiap memproses...');
+
+    await Future.delayed(const Duration(milliseconds: 600));
+
     await ref.read(sttServiceControllerProvider.notifier).stopListening();
 
     final speechState = ref.read(sttServiceControllerProvider);
     final text = speechState.recognizedText;
+    
+    print('stop dan proses suara: $text');
 
-    // Jika tombol kepencet
+    processAiOrders(workspaceId, text);
+  }
+
+  void resetToIdle() {
+    if (state != VoiceState.idle) {
+      print('kembali siaga');
+
+      state = VoiceState.idle;
+    }
+  }
+
+  Future<void> processManualText(String text, String workspaceId) async {
+    print('proses manual');
+    processAiOrders(workspaceId, text);
+  }
+
+  Future<void> processAiOrders(String workspaceId, String text) async {
     if (text.trim().isEmpty) {
       state = VoiceState.idle;
       return;
@@ -66,11 +91,17 @@ class VoiceTransactionController extends _$VoiceTransactionController {
       }
 
       final ttsConfig = aiResult.ttsConfig;
-      await ref.read(ttsServiceControllerProvider.notifier).speak(
-        aiResult.voiceResponse,
-        languageCode: ttsConfig.languageCode,
+      ref.read(ttsServiceControllerProvider.notifier).setDefaultAiTts(
+        text: aiResult.voiceResponse,
         pitch: ttsConfig.pitch,
-        rate: ttsConfig.rate
+        rate: ttsConfig.rate,
+        languageCode: ttsConfig.languageCode,
+      );
+      await ref.read(ttsServiceControllerProvider.notifier).speak(
+        text: aiResult.voiceResponse,
+        pitch: ttsConfig.pitch,
+        rate: ttsConfig.rate,
+        languageCode: ttsConfig.languageCode,
       );
 
       // for (var order in aiResult.orders) {
@@ -84,20 +115,11 @@ class VoiceTransactionController extends _$VoiceTransactionController {
       print('❌ AI Error: $e');
       state = VoiceState.error;
 
+      ref.read(ttsServiceControllerProvider.notifier).setText(fallbackText);
+      ref.read(ttsServiceControllerProvider.notifier).setLanguageCode(fallbackLangCode);
       await ref
           .read(ttsServiceControllerProvider.notifier)
-          .speak(
-            fallbackText,
-            languageCode: fallbackLangCode,
-            pitch: 1.0,
-            rate: 0.5
-          );
-    }
-  }
-
-  void resetToIdle() {
-    if (state != VoiceState.idle) {
-      state = VoiceState.idle;
+          .speak();
     }
   }
 }

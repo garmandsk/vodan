@@ -50,35 +50,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final categoriesAsync = ref.watch(productCategoriesProvider);
     final categoryList = categoriesAsync.value ?? ['Semua'];
 
-    Future<void> _userSpeak() async {
-      final isSuccess = await VoiceBottomSheet.show(context, ref, workspaceId!);
-
-      if (isSuccess && context.mounted) {
-        final isStockAdjusted = ref.read(voiceTransactionControllerProvider.notifier).isLastStockAdjusted;
-
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (context.mounted) {
-            if (isStockAdjusted) {
-              VodanDialog.show(
-                context: context,
-                title: 'Stok Disesuaikan',
-                message: 'Beberapa pesanan suara disesuaikan otomatis karena melebihi sisa stok yang ada di sistem.',
-                buttonText: 'Lanjut ke Pembayaran',
-                buttonColor: theme.colorScheme.primary,
-                icon: Icons.info_outline_rounded,
-                iconColor: theme.colorScheme.primary,
-                onPressed: () {
-                  const TransactionRoute().push(context);
-                },
-              );
-            } else {
-              const TransactionRoute().push(context);
-            }
-          }
-        });
-      }
-    }
-
     return Scaffold(
         backgroundColor: theme.colorScheme.surface,
         body: Column(
@@ -111,7 +82,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               onSelected: (newCategory) => productNotifier.updateCategory(newCategory)
             ),
 
-            // Grid Produk
             // Grid Produk
             Expanded(
               child: productState.when(
@@ -172,7 +142,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Padding(
-          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16.0),
+          padding: isDesktop 
+              ? EdgeInsetsGeometry.only(left: 16, right: 96, top: 16, bottom: 16)
+              : EdgeInsets.only(left: 16.0, right: 16.0, bottom: 30.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -201,14 +173,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 ),
               ),
               if (totalItems > 0) const SizedBox(width: 16,),
-
-              FloatingActionButton(
-                heroTag: 'voice_btn',
-                backgroundColor: theme.colorScheme.primaryContainer,
-                foregroundColor: theme.colorScheme.onPrimaryContainer,
-                onPressed: _userSpeak,
-                child: const Icon(Icons.mic_rounded),
-              ),
             ],
           ),
         ));
@@ -290,11 +254,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      AppFormat.currency(product.price),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        AppFormat.currency(product.price),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     VodanQuantityButton(

@@ -79,6 +79,11 @@ class SttServiceController extends _$SttServiceController {
   }
 
   Future<void> startListening() async {
+    if (state.isListening) {
+      print('ℹ️ Mikrofon sudah berjalan, abaikan spam klik.');
+      return;
+    }
+
     if (!state.isAvailable) await _initSpeech();
 
     if (state.isAvailable) {
@@ -86,12 +91,15 @@ class SttServiceController extends _$SttServiceController {
       
       await _speech.listen(
         onResult: (result) {
+          print('suara terdengar: ${result.recognizedWords}');
           state = state.copyWith(recognizedText: result.recognizedWords);
         },
         listenOptions: stt.SpeechListenOptions(
-          localeId: 'id_ID',
+          localeId: 'id-ID',
           cancelOnError: true,
           partialResults: true,
+          pauseFor: const Duration(seconds: 10),
+          listenFor: const Duration(seconds: 60),
         )
       );
     }

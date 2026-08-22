@@ -90,7 +90,11 @@ class _VodanQuantityButtonState extends State<VodanQuantityButton> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: Icon(Icons.remove, size: 16, color: theme.colorScheme.onPrimaryContainer),
+            icon: Icon(
+              Icons.remove, 
+              size: 16, 
+              color: theme.colorScheme.onPrimaryContainer
+            ),
             onPressed: () {
               _focusNode.unfocus();
               widget.onRemove();
