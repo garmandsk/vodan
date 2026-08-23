@@ -10,7 +10,7 @@ class AppFormat {
   }
 
   static String dateTime(DateTime date) {
-    return DateFormat('dd MMMM YYYY, HH:mm', 'id_ID').format(date);
+    return DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(date);
   }
 
   static String shortDate(DateTime date) {

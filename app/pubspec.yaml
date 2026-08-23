@@ -30,6 +30,7 @@ dependencies:
   device_info_plus: ^13.2.0
   image_picker: ^1.2.3
   shared_preferences: ^2.5.5
+  printing: ^5.15.0
 
 dev_dependencies:
   flutter_test:

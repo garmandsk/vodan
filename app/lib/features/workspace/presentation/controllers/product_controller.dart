@@ -42,20 +42,20 @@ class ProductController extends _$ProductController {
             event: PostgresChangeEvent.all, 
             schema: 'public',
             table: 'products',
-            // filter: PostgresChangeFilter(
-            //   type: PostgresChangeFilterType.eq, 
-            //   column: 'workspace_id', 
-            //   value: workspaceId
-            // ),
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq, 
+              column: 'workspace_id', 
+              value: workspaceId
+            ),
             callback: (payload) {
               print('🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
               ref.invalidateSelf();
             }
           )
           .subscribe((status, [error]) {
-            print('📡 Status Realtime: $status');
+            // print('📡 Status Realtime: $status');
             if (error != null) {
-              print('❌ Error Realtime: $error');
+              // print('❌ Error Realtime: $error');
             }
           });
     }
@@ -64,10 +64,12 @@ class ProductController extends _$ProductController {
   }
 
   Future<List<ProductModel>> _getProduct() async {
-    final workspaceId = ref.read(currentWorkspaceIdProvider);
-    if (workspaceId == null || workspaceId.isEmpty) return [];
+    state = const AsyncValue.loading();
 
     try {
+      final workspaceId = ref.read(currentWorkspaceIdProvider);
+      if (workspaceId == null || workspaceId.isEmpty) return [];
+
       final productRepo = ref.watch(productRepositoryProvider);
       final products = await productRepo.getProducts(workspaceId: workspaceId, query: _currentQuery, category: _currentCategory);
 
@@ -81,9 +83,11 @@ class ProductController extends _$ProductController {
         }
       }
 
+      state = AsyncValue.data(products);
       return products;
-    } catch (e) {
-      throw Exception('Workspace tidak ditemukan.');
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return [];
     }
   }
 

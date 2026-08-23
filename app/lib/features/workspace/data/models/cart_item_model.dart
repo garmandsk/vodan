@@ -35,7 +35,7 @@ class CartItemModel {
         workspaceId: '', 
         name: json['name'].toString(),
         category: json['category'].toString(),
-        nlpAlias: json['nlp_alias'],
+        nlpAlias: json['nlp_alias'] ?? [],
         price: (json['price'] as num?)?.toDouble() ?? 0.0,
         currency: 'IDR', 
         stock: 0,        

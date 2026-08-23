@@ -60,32 +60,6 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
     
     final grandTotal = subtotal;
 
-    ref.listen<AsyncValue<void>>(transactionControllerProvider, (_, state) {
-      if (state.isLoading) return;
-
-      state.when(
-        data: (_) {
-          // Jika transaksi sukses
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Transaksi Berhasil Disimpan! 🎉'), backgroundColor: Colors.green),
-          );
-          // Kembali ke halaman POS setelah sukses
-          // Navigator.pop(context);
-          PosRoute().go(context); 
-        },
-        error: (error, stackTrace) {
-          // Jika transaksi gagal
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal menyimpan transaksi: $error'), 
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        },
-        loading: () {}, // Loading diabaikan karena sudah ditangani di tombol
-      );
-    });
-
     final isLoading = ref.watch(transactionControllerProvider).isLoading;
 
     return Scaffold(
@@ -266,14 +240,32 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                   isLoading: isLoading,
                   extraInfo: AppFormat.currency(grandTotal), 
                   suffixIcon: Icon(Icons.payments_outlined, color: theme.colorScheme.onPrimary),
-                  onPressed: () {
-                    ref.read(transactionControllerProvider.notifier).createTransaction(
+                  onPressed: () async {
+                    final success = await ref.read(transactionControllerProvider.notifier).createTransaction(
                         items: cart,
                         totalPrice: grandTotal,
                         status: _selectedTransactionStatus,
                         paymentMethod: _selectedPaymentMethod,
                       );
+                    
+                    if (!context.mounted) return;
 
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Transaksi Berhasil Disimpan! 🎉'), 
+                          backgroundColor: Colors.green
+                        ),
+                      );
+                      PosRoute().go(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Gagal menyimpan transaksi! Silakan coba lagi.'), 
+                          backgroundColor: theme.colorScheme.error,
+                        ),
+                      );
+                    }
                   },
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_badge.dart';
@@ -26,6 +27,8 @@ class VodanMainScaffold extends ConsumerStatefulWidget {
 
 class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
   bool _isBottomSheetOpen = false;
+  bool _isSpaceDown = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   void _goBranch(int index) {
     widget.navigationShell.goBranch(
@@ -40,6 +43,111 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
     if (currentState == VoiceState.listening) {
       ref.read(voiceTransactionControllerProvider.notifier).stopAndProcess(workspaceId);
     }
+  }
+
+  bool _handleKeyEvent(KeyEvent event) {
+    if (event.logicalKey == LogicalKeyboardKey.space) {
+      if (FocusManager.instance.primaryFocus?.context?.widget is EditableText) {
+        return false; 
+      }
+
+      if (event is KeyRepeatEvent) {
+        return true;
+      }
+
+      final workspaceId = ref.read(currentWorkspaceIdProvider);
+
+      if (event is KeyDownEvent) {
+        if (!_isSpaceDown && !_isBottomSheetOpen) {
+          _isSpaceDown = true; 
+          _startVoiceSession(workspaceId);
+        }
+        return true; 
+      } 
+      else if (event is KeyUpEvent) {
+        if (_isSpaceDown) {
+          _isSpaceDown = false;
+          _stopAndProcess(workspaceId);
+        }
+        return true; 
+      }
+    }
+    return false;
+  }
+
+  Future<void> _startVoiceSession(String? workspaceId) async {
+    if (workspaceId == null || _isBottomSheetOpen) return;
+
+    final voiceState = ref.read(voiceTransactionControllerProvider);
+    final isSpeaking = ref.read(ttsServiceControllerProvider).isSpeaking;
+    final isIdle = voiceState == VoiceState.idle || 
+                   voiceState == VoiceState.successTransaction || 
+                   voiceState == VoiceState.successChat || 
+                   voiceState == VoiceState.error;
+
+    if (!isIdle || isSpeaking) return;
+
+    setState(() => _isBottomSheetOpen = true);
+
+    try {
+      await ref.read(voiceTransactionControllerProvider.notifier).startRecording();
+
+      final controller = _scaffoldKey.currentState?.showBottomSheet(
+        (context) => VoiceBottomSheet(workspaceId: workspaceId),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      );
+
+      if (controller != null) {
+        await controller.closed;
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBottomSheetOpen = false);
+      } else {
+        _isBottomSheetOpen = false;
+      }
+    }
+
+    if (mounted) {
+      final currentState = ref.read(voiceTransactionControllerProvider);
+      if (currentState == VoiceState.successTransaction) {
+        final isStockAdjusted = ref.read(voiceTransactionControllerProvider.notifier).isLastStockAdjusted;
+
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            if (isStockAdjusted) {
+              VodanDialog.show(
+                context: context,
+                title: 'Stok Disesuaikan',
+                message: 'Beberapa pesanan suara disesuaikan otomatis karena melebihi sisa stok yang ada di sistem.',
+                buttonText: 'Lanjut ke Pembayaran',
+                buttonColor: Theme.of(context).colorScheme.primary,
+                icon: Icons.info_outline_rounded,
+                iconColor: Theme.of(context).colorScheme.primary,
+                onPressed: () {
+                  const TransactionRoute().push(context);
+                },
+              );
+            } else {
+              const TransactionRoute().push(context);
+            }
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    super.dispose();
   }
 
   @override
@@ -71,6 +179,7 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
                    voiceState == VoiceState.error;
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: isDesktop
           ? null
           : AppBar(
@@ -109,7 +218,7 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
               ],
             )
           : widget.navigationShell,
-
+    
       floatingActionButtonLocation: isDesktop 
           ? FloatingActionButtonLocation.endFloat 
           : const FixedCenterDockedFabLocation(),
@@ -132,9 +241,9 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
             child: Listener(
               onPointerDown: (isIdle && !isSpeaking) ? (_) async {
                 if (workspaceId == null) return;
-
+    
                 await ref.read(voiceTransactionControllerProvider.notifier).startRecording();
-
+    
                 if (!_isBottomSheetOpen) {
                   _isBottomSheetOpen = true;
                   final controller = Scaffold.of(fabContext).showBottomSheet(
@@ -142,17 +251,17 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
                     backgroundColor: Colors.transparent,
                     elevation: 0,
                   );
-
+    
                   // 3. Tunggu sampai ditutup
                   await controller.closed;
                   _isBottomSheetOpen = false;
-
+    
                   // 4. Setelah ditutup, cek jika transaksi sukses dan butuh dialog
                   if (context.mounted) {
                     final currentState = ref.read(voiceTransactionControllerProvider);
                     if (currentState == VoiceState.successTransaction) {
                       final isStockAdjusted = ref.read(voiceTransactionControllerProvider.notifier).isLastStockAdjusted;
-
+    
                       Future.delayed(const Duration(milliseconds: 300), () {
                         if (context.mounted) {
                           if (isStockAdjusted) {

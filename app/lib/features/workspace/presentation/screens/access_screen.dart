@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/providers/session.dart';
 
-class AdminGateScreen extends ConsumerWidget {
-  const AdminGateScreen({super.key});
+class AccessScreen extends ConsumerWidget {
+  const AccessScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -5,15 +5,12 @@ import 'package:vodan/core/presentation/widgets/vodan_category.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dialog.dart';
 import 'package:vodan/core/presentation/widgets/vodan_quantity_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
-import 'package:vodan/core/presentation/widgets/voice_bottom_sheet.dart';
-import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/utils/app_format.dart';
 import 'package:vodan/core/utils/responsive_utils.dart';
 import 'package:vodan/features/workspace/data/models/product_model.dart';
 import 'package:vodan/features/workspace/presentation/controllers/cart_controller.dart';
 import 'package:vodan/features/workspace/presentation/controllers/product_controller.dart';
-import 'package:vodan/features/workspace/presentation/controllers/voice_transaction_controller.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -38,7 +35,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final gridColumns = context.posGridColumns;
     final padding = context.defaultPadding;
 
-    final workspaceId = ref.read(currentWorkspaceIdProvider);
+    // final workspaceId = ref.read(currentWorkspaceIdProvider);
 
     final cart = ref.watch(cartControllerProvider);
     final totalItems = cart.fold(0, (sum, item) => sum + item.quantity);

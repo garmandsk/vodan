@@ -9,7 +9,17 @@ enum PaymentMethod {
 enum TransactionStatus {
   pending,
   paid, 
-  rejected
+  rejected;
+
+  static TransactionStatus fromString(String? value) {
+    if (value == 'pending') {
+      return TransactionStatus.pending;
+    }
+    else if (value == 'paid') {
+      return TransactionStatus.paid;
+    }
+    return TransactionStatus.rejected;
+  }
 }
 
 class TransactionResponseModel {
@@ -69,7 +79,7 @@ class TransactionResponseModel {
     return TransactionResponseModel(
       id: json['id'].toString(),
       workspaceId: json['workspace_id'].toString(),
-      transactionTime: DateTime.parse(json['transaction_time']),
+      transactionTime: DateTime.tryParse(json['transaction_time']?.toString() ?? '') ?? DateTime.now(),
       items: (json['items'] as List<dynamic>?)
           ?.map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
