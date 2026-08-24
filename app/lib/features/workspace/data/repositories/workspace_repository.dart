@@ -47,9 +47,24 @@ class WorkspaceRepository {
       throw Exception('Gagal menghapus lapak: $e');
     }
   }
+
+  Future<bool> verifyPin(String workspaceId, String pin) async {
+    try {
+      // print('pin: $pin');
+
+      final response = await _supabase.rpc(
+        'verify_workspace',
+        params: {'p_workspace_id': workspaceId, 'p_pin': pin}
+      );
+
+      return response == true;
+    } catch (e) {
+      throw Exception('Gagal verifikasi pin lapak: $e');
+    }
+  }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 WorkspaceRepository workspaceRepository(Ref ref) {
   return WorkspaceRepository(ref.watch(supabaseClientProvider));
 }

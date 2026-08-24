@@ -11,7 +11,7 @@ part 'voice_transaction_controller.g.dart';
 
 enum VoiceState { idle, listening, processing, successChat, successTransaction, error }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class VoiceTransactionController extends _$VoiceTransactionController {
   bool isLastStockAdjusted = false;
 

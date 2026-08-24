@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
+import 'package:vodan/features/workspace_auth/data/models/cashier_session_model.dart';
 
 part 'waiting_room_repository.g.dart';
 
@@ -9,16 +10,48 @@ class WaitingRoomRepository {
 
   final SupabaseClient _supabase;
   
-  Future<String> joinWaitingRoom({required String workspaceId, required String cashierName}) async {
-    final response = await _supabase.from('cashier_queue').insert({
-      'workspace_id': workspaceId,
-      'cashier_name': cashierName,
-      'status': 'pending',
-    }).select('id').single();
-    
-    return response['id']; 
-  }
+  Future<String> joinWaitingRoom({
+    required String workspaceId, 
+    required String cashierName,
+    required String deviceId
+  }) async {
+    try {
+      final existingSession = await _supabase
+          .from('cashier_queue')
+          .select('id, status')
+          .eq('workspace_id', workspaceId)
+          .eq('device_id', deviceId)
+          .maybeSingle();
+      
+      if (existingSession != null) {
+        final currentStatus = QueueStatus.fromString(existingSession['status']);
+        final updateData = {'cashier_name': cashierName};
 
+        if (currentStatus == QueueStatus.rejected) {
+          updateData['status'] = QueueStatus.pending.name;
+        }
+
+        await _supabase
+            .from('cashier_queue')
+            .update(updateData)
+            .eq('id', existingSession['id']);
+
+        return existingSession['id'] as String;
+      }
+
+      final response = await _supabase.from('cashier_queue').insert({
+        'workspace_id': workspaceId,
+        'cashier_name': cashierName,
+        'device_id': deviceId,
+        'status': QueueStatus.pending.name,
+      }).select('id').single();
+
+      return response['id'] as String; 
+    } catch (e) {
+      throw Exception('Gagal memproses masuk lapak: $e');
+    }
+  }
+// terima semua tolak semua
   // Stream: Pantau Status Diri Sendiri (Apakah sudah di-ACC Owner?)
   Stream<Map<String, dynamic>> watchMyStatus(String sessionId) {
     return _supabase
@@ -34,10 +67,12 @@ class WaitingRoomRepository {
         .from('cashier_queue')
         .stream(primaryKey: ['id'])
         .eq('workspace_id', workspaceId)
-        .eq('status', 'pending')
-        .neq('id', mySessionId)
+        .eq('status', QueueStatus.pending.name)
         .handleError((error) {
           print('Stream error caught: $error');
+        })
+        .map((otherCashiers) {
+          return otherCashiers.where((cashier) => cashier['id'] != mySessionId).toList();
         });
   }
 
@@ -60,7 +95,6 @@ class WaitingRoomRepository {
           .select()
           .eq('pass_code', passCode)
           .eq('workspace_id', workspaceId)
-          // 🌟 Filter ini SUDAH membuang tiket yang kedaluwarsa secara otomatis!
           .gte('expires_at', DateTime.now().toIso8601String()) 
           .maybeSingle();
 
@@ -72,7 +106,10 @@ class WaitingRoomRepository {
         return false;
       } 
       
-      await _supabase.from('cashier_queue').update({'status': 'approved'}).eq('id', sessionId);
+      await _supabase
+          .from('cashier_queue')
+          .update({'status': QueueStatus.approved.name})
+          .eq('id', sessionId);
       // print('✅ [DEBUG REPO] Tiket VALID! Status kasir diubah jadi approved.');
       return true;
 

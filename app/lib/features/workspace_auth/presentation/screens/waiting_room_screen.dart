@@ -8,6 +8,7 @@ import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
+import 'package:vodan/features/workspace_auth/data/models/cashier_session_model.dart';
 import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart'; // Import tombol buatanmu!
 
 class WaitingRoomScreen extends ConsumerStatefulWidget {
@@ -116,10 +117,19 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
       next.whenData((statusData) {
         final status = statusData['status'] ?? '';
 
-        if (status == 'approved') {
+        if (status == QueueStatus.approved.name) {
           ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(currentWorkspaceId);
 
           const PosRoute().go(context);
+        } else if (status == QueueStatus.rejected.name) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Anda ditolak untuk memasuki lapak.'), 
+              backgroundColor: Theme.of(context).colorScheme.error
+            )
+          );
+
+          EnterWorkspaceRoute().go(context);
         }
       });
     });

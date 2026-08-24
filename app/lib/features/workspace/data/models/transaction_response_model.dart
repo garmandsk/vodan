@@ -3,12 +3,14 @@ import 'package:vodan/features/workspace/data/models/cart_item_model.dart';
 enum PaymentMethod {
   cash,
   qris,
-  transfer
+  transfer;
+
+  String get capitalizedText => '${name[0].toUpperCase()}${name.substring(1)}';
 }
 
 enum TransactionStatus {
-  pending,
   paid, 
+  pending,
   rejected;
 
   static TransactionStatus fromString(String? value) {
@@ -20,6 +22,8 @@ enum TransactionStatus {
     }
     return TransactionStatus.rejected;
   }
+
+  String get capitalizedText => '${name[0].toUpperCase()}${name.substring(1)}';
 }
 
 class TransactionResponseModel {

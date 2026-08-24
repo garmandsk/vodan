@@ -34,7 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = ref.read(accountControllerProvider).isLoading;
     if (isLoading) return;
 
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       final String email = _emailController.text.trim();
       final String password = _passwordController.text.trim();
 
@@ -50,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ref.read(accountControllerProvider.notifier).login(loginRequestData);
 
       final destination = widget.from;
-      if (destination != null || destination!.isNotEmpty) {
+      if (destination != null && destination.isNotEmpty) {
         context.go(destination);
       } else {
         const LoginRoute().go(context);

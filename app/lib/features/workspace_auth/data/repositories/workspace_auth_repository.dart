@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
@@ -17,8 +20,12 @@ class WorkspaceAuthRepository {
         throw Exception('Sesi telah habis, silahkan login kembali.');
       }
 
+      final pinBytes = utf8.encode(data.adminPin);
+      final clientHashedPin = sha256.convert(pinBytes).toString();
+
       final payload = data.toJson();
       payload['owner_id'] = userId;
+      payload['admin_pin'] = clientHashedPin;
 
       final response = await _supabase
           .from('workspaces')

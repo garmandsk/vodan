@@ -97,7 +97,7 @@ class TransactionRepository {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 TransactionRepository transactionRepository(Ref ref) {
   return TransactionRepository(Supabase.instance.client);
 }

@@ -1,1 +1,1 @@
-alter publication supabase_realtime add table products
+-- alter publication supabase_realtime add table products

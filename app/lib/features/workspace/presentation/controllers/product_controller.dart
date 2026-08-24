@@ -9,7 +9,7 @@ import '../../data/models/product_model.dart';
 
 part 'product_controller.g.dart';
 
-@Riverpod(keepAlive: true)
+@riverpod
 FutureOr<List<String>> productCategories(Ref ref) async {
   final workspaceId = ref.watch(currentWorkspaceIdProvider);
   if (workspaceId == null || workspaceId.isEmpty) return ['Semua'];
@@ -18,7 +18,7 @@ FutureOr<List<String>> productCategories(Ref ref) async {
   return await repo.getAvailableCategories(workspaceId);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 class ProductController extends _$ProductController {
   Timer? _debounceTimer;
   RealtimeChannel? _realtimeChannel;
@@ -94,19 +94,23 @@ class ProductController extends _$ProductController {
   void updateSearch(String query) {
     if (_currentQuery == query) return;
     _currentQuery = query;
+    
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
-      ref.invalidateSelf();
+      state = const AsyncValue.loading();
+      state = await AsyncValue.guard(() => _getProduct());
     });
   }
 
-  void updateCategory(String category) async {
+  void updateCategory(String category) { // Tidak perlu async di definisinya
     if (_currentCategory == category) return;
     _currentCategory = category;
 
     _debounceTimer?.cancel();
-
-    ref.invalidateSelf();
+    state = const AsyncValue.loading();
+    Future.microtask(() async {
+      state = await AsyncValue.guard(() => _getProduct());
+    });
   }
 
   Future<void> refresh() async {

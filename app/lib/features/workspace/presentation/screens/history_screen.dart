@@ -16,7 +16,7 @@ class HistoryScreen extends ConsumerStatefulWidget {
 
 class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _filters = ['Semua', TransactionStatus.paid.name, TransactionStatus.pending.name, TransactionStatus.rejected.name];
+  final List<String> _filters = ['Semua', TransactionStatus.paid.capitalizedText, TransactionStatus.pending.capitalizedText, TransactionStatus.rejected.capitalizedText];
 
   Future<void> _pickDateRange(BuildContext context, dynamic transactionNotifier) async {
     final theme = Theme.of(context);
@@ -111,12 +111,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           VodanFilterChips(
             padding: EdgeInsets.symmetric(horizontal: padding),
             items: _filters, 
-            selectedItem: transactionNotifier.selectedStatus, 
+            selectedItem: transactionNotifier.selectedStatus == null
+                ? 'Semua'
+                : '${transactionNotifier.selectedStatus![0].toUpperCase()}${transactionNotifier.selectedStatus!.substring(1).toLowerCase()}', 
             onSelected: (newStatus) {
               if (newStatus == 'Semua') {
                 transactionNotifier.updateStatus(null);
               } else {
-                final enumValue = TransactionStatus.values.firstWhere((e) => e.name == newStatus); 
+                final enumValue = TransactionStatus.values.firstWhere(
+                  (e) => e.name == newStatus.toLowerCase(),
+                  orElse: () => TransactionStatus.pending
+                ); 
                 transactionNotifier.updateStatus(enumValue);
               }
             }

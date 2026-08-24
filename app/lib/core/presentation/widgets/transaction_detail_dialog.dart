@@ -31,7 +31,6 @@ class _TransactionDetailDialogState extends ConsumerState<TransactionDetailDialo
   late PaymentMethod _editedPaymentMethod;
   late TextEditingController _cashierController;
 
-  // 🌟 Fungsi untuk merancang tata letak (layout) struk PDF
   Future<Uint8List> _generateReceiptPdf(PdfPageFormat format) async {
     final pdf = pw.Document();
 
@@ -214,12 +213,9 @@ class _TransactionDetailDialogState extends ConsumerState<TransactionDetailDialo
                   labelText: '', 
                   icon: Icons.query_stats_rounded, 
                   items: TransactionStatus.values.map((status) {
-                    final text = status.name;
-                    final capitalizedText = '${text[0].toUpperCase()}${text.substring(1)}';
-
                     return DropdownMenuItem(
-                      value: text, 
-                      child: Text(capitalizedText),
+                      value: status.name, 
+                      child: Text(status.capitalizedText),
                     );
                   }).toList(), 
                   onChanged: (value) {
@@ -234,12 +230,9 @@ class _TransactionDetailDialogState extends ConsumerState<TransactionDetailDialo
                   labelText: '', 
                   icon: Icons.payment_rounded, 
                   items: PaymentMethod.values.map((method) {
-                    final text = method.name;
-                    final capitalizedText = '${text[0].toUpperCase()}${text.substring(1)}';
-
                     return DropdownMenuItem(
-                      value: text, 
-                      child: Text(capitalizedText),
+                      value: method.name, 
+                      child: Text(method.capitalizedText),
                     );
                   }).toList(), 
                   onChanged: (value) {

@@ -24,7 +24,7 @@ class QueueRepository {
   }
 }
 
-@riverpod 
+@Riverpod(keepAlive: true)
 QueueRepository queueRepository(Ref ref) {
   return QueueRepository(Supabase.instance.client);
 }

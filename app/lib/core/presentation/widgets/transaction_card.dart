@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:vodan/core/presentation/widgets/transaction_detail_dialog.dart';
 import 'package:vodan/core/utils/app_format.dart'; 
 import 'package:vodan/features/workspace/data/models/transaction_response_model.dart';
@@ -127,9 +126,6 @@ class TransactionCard extends ConsumerWidget {
                 Row(
                   children: [
                     Text('${_getPaymentName(transaction.paymentMethod)} ', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
-                    _buildBadge(context, transaction.status == TransactionStatus.pending ? 'Belum Lunas' : 'Lunas', 
-                        transaction.status == TransactionStatus.pending ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9), 
-                        transaction.status == TransactionStatus.pending ? const Color(0xFFF57C00) : const Color(0xFF2E7D32)),
                   ],
                 )
               ],
@@ -204,22 +200,20 @@ class TransactionCard extends ConsumerWidget {
   (String, Color, Color) _getStatusStyle(TransactionStatus status) {
     switch (status) {
       case TransactionStatus.pending: // Dipesan
-        return ('Dipesan', const Color(0xFFE3F2FD), const Color(0xFF1976D2));
+        return (status.capitalizedText, const Color(0xFFFFF3E0), const Color(0xFFF57C00));
       case TransactionStatus.paid: // Dibayar
-        return ('Dibayar', const Color(0xFFE8F5E9), const Color(0xFF2E7D32));
+        return (status.capitalizedText, const Color(0xFFE8F5E9), const Color(0xFF2E7D32));
       case TransactionStatus.rejected: // Ditolak
-        return ('Ditolak', const Color(0xFFFFEBEE), const Color(0xFFC62828));
-      default:
-        return ('Unknown', Colors.grey.shade200, Colors.grey.shade800);
+        return (status.capitalizedText, const Color(0xFFFFEBEE), const Color(0xFFC62828));
     }
   }
 
   // HELPER: Fungsi Penerjemah Metode Bayar
   String _getPaymentName(PaymentMethod method) {
     switch (method) {
-      case PaymentMethod.cash: return 'Tunai';
-      case PaymentMethod.qris: return 'QRIS';
-      case PaymentMethod.transfer: return 'Transfer';
+      case PaymentMethod.cash: return method.capitalizedText;
+      case PaymentMethod.qris: return method.capitalizedText;
+      case PaymentMethod.transfer: return method.capitalizedText;
     }
   }
 }

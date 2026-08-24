@@ -16,8 +16,8 @@ void main() async {
 
   await initializeDateFormatting('id_ID', null);
 
-  print('supabase url: ${Env.supabaseUrl}');
-  print('supabase key: ${Env.supabasePublishableKey}');
+  // print('supabase url: ${Env.supabaseUrl}');
+  // print('supabase key: ${Env.supabasePublishableKey}');
 
   await Supabase.initialize(
     url: Env.supabaseUrl,

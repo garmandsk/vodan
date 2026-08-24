@@ -1,5 +1,5 @@
 CREATE TABLE shift_passes (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     workspace_id UUID NOT NULL,
     pass_code TEXT UNIQUE NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,

@@ -24,7 +24,7 @@ class TransactionController extends _$TransactionController {
   DateTime? _startDate;
   DateTime? _endDate;
 
-  String get selectedStatus => _currentStatus;
+  String? get selectedStatus => _currentStatus;
 
   @override
   FutureOr<List<TransactionResponseModel>> build() async {
@@ -153,9 +153,11 @@ class TransactionController extends _$TransactionController {
   void updateSearch(String query) {
     if (_currentQuery == query) return;
     _currentQuery = query;
+    
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
-      ref.invalidateSelf();
+      state = const AsyncValue.loading();
+      state = await AsyncValue.guard(() => getTransactions());
     });
   }
 
@@ -163,7 +165,10 @@ class TransactionController extends _$TransactionController {
     if (_currentStatus == status?.name) return;
     _currentStatus = status?.name ?? 'Semua';
     _debounceTimer?.cancel();
-    ref.invalidateSelf();
+    state = const AsyncValue.loading();
+    Future.microtask(() async {
+      state = await AsyncValue.guard(() => getTransactions());
+    });
   }
 
   void updateDateRange(DateTime? start, DateTime? end) {

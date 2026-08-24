@@ -169,11 +169,12 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                 initialValue: _selectedTransactionStatus.name, 
                 labelText: '', 
                 icon: Icons.query_stats_rounded, 
-                items: const [
-                  DropdownMenuItem(value: 'paid', child: Text('Dibayar')),
-                  DropdownMenuItem(value: 'pending', child: Text('Dipesan')),
-                  DropdownMenuItem(value: 'rejected', child: Text('Ditolak')),
-                ], 
+                items: TransactionStatus.values.map((status) {
+                  return DropdownMenuItem(
+                    value: status.name, 
+                    child: Text(status.capitalizedText),
+                  );
+                }).toList(), 
                 onChanged: (value) {
                   setState(() {
                     _selectedTransactionStatus = TransactionStatus.values.byName(value.toString());
@@ -186,27 +187,16 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                 initialValue: _selectedPaymentMethod.name, 
                 labelText: '', 
                 icon: Icons.payment_rounded, 
-                items: const [
-                  DropdownMenuItem(value: 'cash', child: Text('Tunai')),
-                  DropdownMenuItem(value: 'qris', child: Text('QRIS')),
-                  DropdownMenuItem(value: 'transfer', child: Text('Transfer')),
-                ], 
+                items: PaymentMethod.values.map((method) {
+                  return DropdownMenuItem(
+                    value: method.name, 
+                    child: Text(method.capitalizedText),
+                  );
+                }).toList(), 
                 onChanged: (value) {
                   setState(() {
                     _selectedPaymentMethod = PaymentMethod.values.byName(value.toString());
                   });
-
-                  if (value == 'qris' || value == 'transfer') {
-                    Future.delayed(const Duration(milliseconds: 300), () {
-                      if (_scrollController.hasClients) {
-                        _scrollController.animateTo(
-                          _scrollController.position.maxScrollExtent, // Gulir ke mentok bawah
-                          duration: const Duration(milliseconds: 300), // Kecepatan scroll
-                          curve: Curves.easeOutCubic, // Gaya animasi yang lembut
-                        );
-                      }
-                    });
-                  } 
                 },
               ),
 
