@@ -11,7 +11,7 @@ part 'product_controller.g.dart';
 
 @riverpod
 FutureOr<List<String>> productCategories(Ref ref) async {
-  final workspaceId = ref.watch(currentWorkspaceIdProvider);
+  final workspaceId = ref.watch(currentWorkspaceProvider)?.id;
   if (workspaceId == null || workspaceId.isEmpty) return ['Semua'];
 
   final repo = ref.watch(productRepositoryProvider);
@@ -34,30 +34,30 @@ class ProductController extends _$ProductController {
       _realtimeChannel?.unsubscribe();
     });
 
-    final workspaceId = ref.watch(currentWorkspaceIdProvider);
+    final workspaceId = ref.watch(currentWorkspaceProvider)?.id;
     if (workspaceId != null && workspaceId.isNotEmpty) {
-      _realtimeChannel = ref.read(supabaseClientProvider)
+      _realtimeChannel = ref
+          .read(supabaseClientProvider)
           .channel('public:products:$workspaceId')
           .onPostgresChanges(
-            event: PostgresChangeEvent.all, 
-            schema: 'public',
-            table: 'products',
-            filter: PostgresChangeFilter(
-              type: PostgresChangeFilterType.eq, 
-              column: 'workspace_id', 
-              value: workspaceId
-            ),
-            callback: (payload) {
-              print('🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
-              ref.invalidateSelf();
-            }
-          )
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'products',
+              filter: PostgresChangeFilter(
+                  type: PostgresChangeFilterType.eq,
+                  column: 'workspace_id',
+                  value: workspaceId),
+              callback: (payload) {
+                print(
+                    '🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
+                ref.invalidateSelf();
+              })
           .subscribe((status, [error]) {
-            // print('📡 Status Realtime: $status');
-            if (error != null) {
-              // print('❌ Error Realtime: $error');
-            }
-          });
+        // print('📡 Status Realtime: $status');
+        if (error != null) {
+          // print('❌ Error Realtime: $error');
+        }
+      });
     }
 
     return _getProduct();
@@ -67,18 +67,21 @@ class ProductController extends _$ProductController {
     state = const AsyncValue.loading();
 
     try {
-      final workspaceId = ref.read(currentWorkspaceIdProvider);
+      final workspaceId = ref.read(currentWorkspaceProvider)?.id;
       if (workspaceId == null || workspaceId.isEmpty) return [];
 
       final productRepo = ref.watch(productRepositoryProvider);
-      final products = await productRepo.getProducts(workspaceId: workspaceId, query: _currentQuery, category: _currentCategory);
+      final products = await productRepo.getProducts(
+          workspaceId: workspaceId,
+          query: _currentQuery,
+          category: _currentCategory);
 
       if (products.isEmpty) {
         final workspaceRepo = ref.read(workspaceRepositoryProvider);
         final isExists = await workspaceRepo.checkWorkspaceExists(workspaceId);
 
         if (!isExists) {
-          ref.read(currentWorkspaceIdProvider.notifier).clearWorkspaceId();
+          ref.read(currentWorkspaceProvider.notifier).clearWorkspaceSession();
           throw Exception('Lapak tidak ditemukan!');
         }
       }
@@ -94,7 +97,7 @@ class ProductController extends _$ProductController {
   void updateSearch(String query) {
     if (_currentQuery == query) return;
     _currentQuery = query;
-    
+
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       state = const AsyncValue.loading();
@@ -102,7 +105,8 @@ class ProductController extends _$ProductController {
     });
   }
 
-  void updateCategory(String category) { // Tidak perlu async di definisinya
+  void updateCategory(String category) {
+    // Tidak perlu async di definisinya
     if (_currentCategory == category) return;
     _currentCategory = category;
 
@@ -117,7 +121,6 @@ class ProductController extends _$ProductController {
     ref.invalidate(productCategoriesProvider);
 
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-        () => _getProduct());
+    state = await AsyncValue.guard(() => _getProduct());
   }
 }

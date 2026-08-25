@@ -5,7 +5,7 @@ import '../../data/repositories/workspace_repository.dart';
 
 part 'workspace_controller.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class WorkspaceController extends _$WorkspaceController {
   @override  
   FutureOr<List<WorkspaceResponseModel>> build() async {
@@ -13,12 +13,36 @@ class WorkspaceController extends _$WorkspaceController {
     return await repo.getWorkspaceList();
   }
 
+  Future<String?> editPin(String workspaceId, String newPin) async {
+    try {
+      final repo = ref.read(workspaceRepositoryProvider);
+      await repo.editPin(workspaceId, newPin);
+      return null;
+    } catch (e) {
+      return 'Gagal edit pin lapak';
+      // return e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  Future<String?> editWorkspaceName(String workspaceId, String newName) async {
+    try {
+      final repo = ref.read(workspaceRepositoryProvider);
+      await repo.editWorkspaceName(workspaceId, newName);
+
+      ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: workspaceId, workspaceName: newName);
+      return null;
+    } catch (e) {
+      // return 'Gagal edit nama lapak';
+      return e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
   Future<void> deleteWorkspace(String id) async {
     await ref.read(workspaceRepositoryProvider).deleteWorkspace(id);
 
-    final currentId = ref.read(currentWorkspaceIdProvider);
+    final currentId = ref.read(currentWorkspaceProvider)?.id;
     if (currentId == id) {
-      ref.read(currentWorkspaceIdProvider.notifier).clearWorkspaceId();
+      ref.read(currentWorkspaceProvider.notifier).clearWorkspaceSession();
     }
 
     ref.invalidateSelf();

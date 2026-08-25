@@ -8,8 +8,8 @@ import 'package:vodan/core/presentation/widgets/vodan_bottom_sheet.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dialog.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
-import 'package:vodan/core/presentation/widgets/vodan_qr_scanner.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
+import 'package:vodan/features/account/presentation/controllers/account_controller.dart';
 
 class CashierBottomSheet extends ConsumerStatefulWidget {
   final String title;
@@ -61,51 +61,46 @@ class _CashierBottomSheetState extends ConsumerState<CashierBottomSheet> {
   late TextEditingController _workspaceIdController;
   late TextEditingController _nameController;
 
-  bool _isLoadingDeviceId = true;
+  bool _isLoadingDeviceName = true;
   bool _isSubmitting = false; 
 
-  void _fetchDeviceId() async {
-    final deviceInfo = DeviceInfoPlugin();
-    String deviceId = 'Unknown Device';
-    try {
-      if (kIsWeb) {
-        final webInfo = await deviceInfo.webBrowserInfo;
-        deviceId = webInfo.browserName.name;
-      } else if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-        deviceId = androidInfo.model;
-      } else if (Platform.isIOS) {
-        final iOsInfo = await deviceInfo.iosInfo;
-        deviceId = iOsInfo.model;
-      } else if (Platform.isMacOS) {
-        final macOsInfo = await deviceInfo.macOsInfo;
-        deviceId = macOsInfo.model;
-      } else if (Platform.isWindows) {
-        final windowsInfo = await deviceInfo.windowsInfo;
-        deviceId = windowsInfo.computerName;
-      }
-    } catch (e) {
-      debugPrint('Gagal mengambil device ID: $e');
-    }
-
+  Future<void> _fetchName() async {
+    final userLoggedInName = ref.read(getAccountProvider)?.userMetadata?['name'];
+    final cashierName = userLoggedInName ?? await _fetchDeviceName();
+    
     if (mounted) {
       setState(() {
-        _nameController.text = 'Kasir-$deviceId';
-        _isLoadingDeviceId = false;
+        _nameController.text = 'Kasir-$cashierName';
+        _isLoadingDeviceName = false;
       });
     }
   }
 
-  Future<void> _scanQr() async {
-    final scannedResult = await Navigator.push<String>(
-      context, 
-      MaterialPageRoute(builder: (context) => const VodanQrScannerScreen())
-    );
+  Future<String> _fetchDeviceName() async {
+    final deviceInfo = DeviceInfoPlugin();
+    String deviceName = 'Unknown Device';
+    try {
+      if (kIsWeb) {
+        final webInfo = await deviceInfo.webBrowserInfo;
+        deviceName = webInfo.browserName.name;
+      } else if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        deviceName = androidInfo.model;
+      } else if (Platform.isIOS) {
+        final iOsInfo = await deviceInfo.iosInfo;
+        deviceName = iOsInfo.model;
+      } else if (Platform.isMacOS) {
+        final macOsInfo = await deviceInfo.macOsInfo;
+        deviceName = macOsInfo.model;
+      } else if (Platform.isWindows) {
+        final windowsInfo = await deviceInfo.windowsInfo;
+        deviceName = windowsInfo.computerName;
+      }
 
-    if (scannedResult != null && scannedResult.isNotEmpty) {
-      setState(() {
-        _workspaceIdController.text = scannedResult;
-      });
+      return deviceName;
+    } catch (e) {
+      debugPrint('Gagal mengambil device ID: $e');
+      return deviceName;
     }
   }
 
@@ -142,9 +137,9 @@ class _CashierBottomSheetState extends ConsumerState<CashierBottomSheet> {
     _nameController = TextEditingController(text: widget.initialCashierName);
 
     if (widget.initialCashierName != null && widget.initialCashierName!.isNotEmpty) {
-      _isLoadingDeviceId = false;
+      _isLoadingDeviceName = false;
     } else {
-      _fetchDeviceId();
+      _fetchName();
     }
   }
 
@@ -176,10 +171,6 @@ class _CashierBottomSheetState extends ConsumerState<CashierBottomSheet> {
             hintText: '123-abc-456-def-789',
             prefixIcon: Icons.store_rounded,
             prefixIconColor: Theme.of(context).colorScheme.secondary,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.qr_code_scanner_rounded),
-              onPressed: _scanQr
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) return 'ID Lapak wajib diisi';
               return null;
@@ -188,12 +179,12 @@ class _CashierBottomSheetState extends ConsumerState<CashierBottomSheet> {
 
           VodanTextFormField(
             controller: _nameController,
-            enabled: !_isLoadingDeviceId,
+            enabled: !_isLoadingDeviceName,
             labelText: 'Nama Kasir',
             hintText: 'Kasir-Udin',
             prefixIcon: Icons.badge_rounded,
             prefixIconColor: Theme.of(context).colorScheme.tertiary,
-            suffixIcon: _isLoadingDeviceId
+            suffixIcon: _isLoadingDeviceName
                 ? const Padding(padding: EdgeInsets.all(12.0), child: CircularProgressIndicator(strokeWidth: 2))
                 : null,
             validator: (value) {
@@ -204,7 +195,7 @@ class _CashierBottomSheetState extends ConsumerState<CashierBottomSheet> {
 
           VodanActionButton(
             text: widget.submitButtonText, 
-            isLoading: _isLoadingDeviceId || _isSubmitting, 
+            isLoading: _isLoadingDeviceName || _isSubmitting, 
             onPressed: _submit
           ),
         ],

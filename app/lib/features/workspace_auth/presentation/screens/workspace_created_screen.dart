@@ -94,7 +94,7 @@ class _WorkspaceCreatedScreenState extends ConsumerState<WorkspaceCreatedScreen>
                   // print('name: $name');
                   final sessionId = 'admin-session-${widget.workspaceId}'; 
                   ref.read(currentUserProvider.notifier).setSession(name: name, id: sessionId);
-                  ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(widget.workspaceId);
+                  ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: widget.workspaceId);
                   PosRoute().go(context);
                 }
               ),

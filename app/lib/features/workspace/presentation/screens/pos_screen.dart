@@ -35,7 +35,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final gridColumns = context.posGridColumns;
     final padding = context.defaultPadding;
 
-    // final workspaceId = ref.read(currentWorkspaceIdProvider);
+    // final workspaceId = ref.read(currentWorkspaceProvider);
 
     final cart = ref.watch(cartControllerProvider);
     final totalItems = cart.fold(0, (sum, item) => sum + item.quantity);
@@ -52,7 +52,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-
             // Search
             Padding(
               padding: EdgeInsets.only(
@@ -61,11 +60,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 children: [
                   Expanded(
                     child: VodanTextFormField(
-                      controller: _searchController,
-                      hintText: 'Cari makanan, minuman...',
-                      prefixIcon: Icons.search_rounded,
-                      onChanged: (newQuery) => productNotifier.updateSearch(newQuery)
-                    ),
+                        controller: _searchController,
+                        hintText: 'Cari makanan, minuman...',
+                        prefixIcon: Icons.search_rounded,
+                        onChanged: (newQuery) =>
+                            productNotifier.updateSearch(newQuery)),
                   ),
                 ],
               ),
@@ -73,74 +72,75 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
             // Filtering
             VodanFilterChips(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              items: categoryList,
-              selectedItem: productNotifier.selectedCategory,
-              onSelected: (newCategory) => productNotifier.updateCategory(newCategory)
-            ),
+                padding: EdgeInsets.symmetric(horizontal: padding),
+                items: categoryList,
+                selectedItem: productNotifier.selectedCategory,
+                onSelected: (newCategory) =>
+                    productNotifier.updateCategory(newCategory)),
 
             // Grid Produk
             Expanded(
-              child: productState.when(
-                skipLoadingOnReload: true, 
-                
-                data: (products) {
-                  if (products.isEmpty && !productState.isLoading) {
-                    return _buildEmptyState(theme);
-                  }
+                child: productState.when(
+              skipLoadingOnReload: true,
+              data: (products) {
+                if (products.isEmpty && !productState.isLoading) {
+                  return _buildEmptyState(theme);
+                }
 
-                  return Stack(
-                    children: [
-                      AnimatedOpacity(
-                        opacity: productState.isLoading ? 0.4 : 1.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: GridView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 120),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: gridColumns,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.75,
-                          ),
-                          itemCount: products.length,
-                          itemBuilder: (context, index) {
-                            final product = products[index];
-                            final cartItem = cart
-                                .where((item) => item.product.id == product.id)
-                                .firstOrNull;
-                            final qty = cartItem?.quantity ?? 0;
+                return Stack(
+                  children: [
+                    AnimatedOpacity(
+                      opacity: productState.isLoading ? 0.4 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: GridView.builder(
+                        padding: const EdgeInsets.only(
+                            left: 16, right: 16, top: 12, bottom: 120),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridColumns,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.75,
+                        ),
+                        itemCount: products.length,
+                        itemBuilder: (context, index) {
+                          final product = products[index];
+                          final cartItem = cart
+                              .where((item) => item.product.id == product.id)
+                              .firstOrNull;
+                          final qty = cartItem?.quantity ?? 0;
 
-                            return _buildProductCard(theme, product, qty);
-                          },
+                          return _buildProductCard(theme, product, qty);
+                        },
+                      ),
+                    ),
+                    if (productState.isLoading)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: LinearProgressIndicator(
+                          minHeight: 3,
+                          backgroundColor:
+                              theme.colorScheme.surfaceContainerHighest,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
-                      
-                      if (productState.isLoading)
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: LinearProgressIndicator(
-                            minHeight: 3,
-                            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                    ],
-                  );
-                },
-                error: (err, stack) => Center(
-                  child: Text('Terjadi kesalahan: $err', style: TextStyle(color: theme.colorScheme.error)),
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-              )
-            ),
+                  ],
+                );
+              },
+              error: (err, stack) => Center(
+                child: Text('Terjadi kesalahan: $err',
+                    style: TextStyle(color: theme.colorScheme.error)),
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+            )),
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Padding(
-          padding: isDesktop 
-              ? EdgeInsetsGeometry.only(left: 16, right: 96, top: 16, bottom: 16)
+          padding: isDesktop
+              ? EdgeInsetsGeometry.only(
+                  left: 16, right: 96, top: 16, bottom: 16)
               : EdgeInsets.only(left: 16.0, right: 16.0, bottom: 30.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -169,7 +169,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       : const SizedBox.shrink(),
                 ),
               ),
-              if (totalItems > 0) const SizedBox(width: 16,),
+              if (totalItems > 0)
+                const SizedBox(
+                  width: 16,
+                ),
             ],
           ),
         ));
@@ -204,19 +207,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
                 image: DecorationImage(
-                  // Nanti diganti dengan URL gambar asli dari bucket Supabase
-                  image: NetworkImage('https://images.unsplash.com/photos/random'),
+                  image:
+                      const NetworkImage('https://picsum.photos/200'),
                   fit: BoxFit.cover,
                 ),
               ),
-              child: product.stock <= 0 
+              child: product.stock <= 0
                   ? Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20))
-                      ),
-                      child: const Center(child: Text('HABIS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                    ) 
+                          color: Colors.black.withValues(alpha: 0.5),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20))),
+                      child: const Center(
+                          child: Text('HABIS',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold))),
+                    )
                   : null,
             ),
           ),
@@ -237,17 +244,19 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Stok: ${product.stock}', 
-                      style: theme.textTheme.bodySmall?.copyWith(color: product.stock < 5 ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant)
-                    ),
-                    Text(
-                      '${product.sold} Terjual', 
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)
-                    ),
+                    Text('Stok: ${product.stock}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: product.stock < 5
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.onSurfaceVariant)),
+                    Text('${product.sold} Terjual',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant)),
                   ],
                 ),
-                const SizedBox(height: 8,),
+                const SizedBox(
+                  height: 8,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -266,16 +275,17 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         // print('product id: ${product.id}');
                         // print('qty: $qty');
                         // print('product stock: ${product.stock}');
-                        
+
                         if (qty < product.stock - product.sold) {
                           // print('tambah');
-                          ref.read(cartControllerProvider.notifier).updateQuantity(product, qty + 1);
+                          ref
+                              .read(cartControllerProvider.notifier)
+                              .updateQuantity(product, qty + 1);
                         } else {
                           VodanDialog.show(
-                            context: context, 
-                            title: 'Stok Habis', 
-                            message: 'Stok ${product.name} tidak mencukupi!'
-                          );
+                              context: context,
+                              title: 'Stok Habis',
+                              message: 'Stok ${product.name} tidak mencukupi!');
                         }
                       },
                       onRemove: () => ref
@@ -284,21 +294,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       onChanged: (newQty) {
                         if (newQty <= 0) {
                           VodanDialog.show(
-                            context: context, 
-                            title: 'Peringatan', 
-                            message: 'Kuantitas minimal adalah 1. Gunakan tombol hapus untuk membatalkan pesanan.'
-                          );
+                              context: context,
+                              title: 'Peringatan',
+                              message:
+                                  'Kuantitas minimal adalah 1. Gunakan tombol hapus untuk membatalkan pesanan.');
                           return;
                         }
-                        
+
                         if (newQty <= product.stock - product.sold) {
-                          ref.read(cartControllerProvider.notifier).updateQuantity(product, newQty);
+                          ref
+                              .read(cartControllerProvider.notifier)
+                              .updateQuantity(product, newQty);
                         } else {
                           VodanDialog.show(
-                            context: context, 
-                            title: 'Stok Habis', 
-                            message: 'Sisa stok ${product.name} hanya ${product.stock - product.sold}!'
-                          );
+                              context: context,
+                              title: 'Stok Habis',
+                              message:
+                                  'Sisa stok ${product.name} hanya ${product.stock - product.sold}!');
                         }
                       },
                     )
@@ -317,10 +329,15 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 64, color: theme.colorScheme.surfaceContainerHighest),
+          Icon(Icons.search_off_rounded,
+              size: 64, color: theme.colorScheme.surfaceContainerHighest),
           const SizedBox(height: 16),
-          Text('Produk tidak ditemukan', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-          Text('Coba gunakan kata kunci lain', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text('Produk tidak ditemukan',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          Text('Coba gunakan kata kunci lain',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         ],
       ),
     );

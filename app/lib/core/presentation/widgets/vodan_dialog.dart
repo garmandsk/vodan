@@ -4,27 +4,38 @@ class VodanDialog {
   static void show({
     required BuildContext context,
     required String title,
-    required String message,
+    String? message, 
+    Widget? customContent,
     String buttonText = 'Tutup',
-    Color buttonColor = Colors.red,
-    IconData icon = Icons.error_outline_rounded,
-    Color iconColor = Colors.red,
+    Color? buttonColor,
+    IconData icon = Icons.info_outline_rounded,
+    Color? iconColor,
     VoidCallback? onPressed,
+    List<Widget>? customActions,
   }) {
+    final theme = Theme.of(context);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: Icon(icon, color: iconColor, size: 48),
-        title: Text(title, textAlign: TextAlign.center),
-        content: Text(
-          message,
-          textAlign: TextAlign.center,
+        icon: Icon(icon, color: iconColor ?? theme.colorScheme.primary, size: 48),
+        title: Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (message != null) 
+              Text(message, textAlign: TextAlign.center),
+            if (message != null && customContent != null) 
+              const SizedBox(height: 16),
+            if (customContent != null) 
+              customContent,
+          ],
         ),
         actionsAlignment: MainAxisAlignment.center,
-        actions: [
+        actions: customActions ?? [
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: buttonColor),
+            style: FilledButton.styleFrom(backgroundColor: buttonColor ?? theme.colorScheme.primary),
             onPressed: () {
               Navigator.pop(context); 
               if (onPressed != null) onPressed();

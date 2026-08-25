@@ -97,22 +97,22 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
         final workspace = workspaces[index];
 
         return VodanActionCard(
-            title: 'Lapak ${workspace.name}',
+            title: workspace.name,
             subtitle: workspace.id,
             prefixIcon: Icons.store_rounded,
             color: Theme.of(context).colorScheme.primary,
             onTap: () {
+              final sessionId = 'admin-session-${workspace.id}';
               final name =
                   ref.watch(getAccountProvider)?.userMetadata?['name'] ??
                       'Anonim';
               // print('name: $name');
-              final sessionId = 'admin-session-${workspace.id}';
               ref
                   .read(currentUserProvider.notifier)
                   .setSession(name: name, id: sessionId);
               ref
-                  .read(currentWorkspaceIdProvider.notifier)
-                  .setWorkspaceId(workspace.id);
+                  .read(currentWorkspaceProvider.notifier)
+                  .setWorkspaceSession(workspaceId: workspace.id, workspaceName: workspace.name);
               const PosRoute().go(context);
             });
       },

@@ -32,7 +32,7 @@ class TransactionController extends _$TransactionController {
       _realtimeChannel?.unsubscribe();
     });
 
-    final workspaceId = ref.watch(currentWorkspaceIdProvider);
+    final workspaceId = ref.watch(currentWorkspaceProvider)?.id;
     if (workspaceId != null && workspaceId.isNotEmpty) {
       _realtimeChannel = ref.read(supabaseClientProvider)
           .channel('public:transaction_log:$workspaceId')
@@ -71,7 +71,7 @@ class TransactionController extends _$TransactionController {
     state = const AsyncValue.loading();
 
     try {
-      final workspaceId = ref.read(currentWorkspaceIdProvider) ?? 'unknown_workspace';
+      final workspaceId = ref.read(currentWorkspaceProvider)?.id ?? 'unknown_workspace';
       final cashierName = ref.read(currentUserProvider)?.cashierName ?? 'Kasir-anonim';
 
       final transactionData = TransactionRequestModel(
@@ -100,7 +100,7 @@ class TransactionController extends _$TransactionController {
     state = const AsyncValue.loading();
 
     try {
-      final workspaceId = ref.read(currentWorkspaceIdProvider);
+      final workspaceId = ref.read(currentWorkspaceProvider)?.id;
       if (workspaceId == null || workspaceId.isEmpty) {
         throw Exception('Lapak tidak ditemukan!');
       }

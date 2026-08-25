@@ -11,7 +11,7 @@ class VodanTextFormField extends StatelessWidget {
     this.prefixIconColor,
     this.suffixIcon,
     this.suffixIconColor,
-    this.obscureText = false,
+    this.obscureText,
     this.keyboardType,
     this.textInputAction,
     this.validator,
@@ -32,7 +32,7 @@ class VodanTextFormField extends StatelessWidget {
   final Color? prefixIconColor;
   final Widget? suffixIcon;
   final Color? suffixIconColor;
-  final bool obscureText;
+  final bool? obscureText;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final String? Function(String?)? validator;
@@ -49,7 +49,7 @@ class VodanTextFormField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      obscureText: obscureText,
+      obscureText: obscureText ?? false,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       validator: validator,

@@ -84,7 +84,7 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
 
         if (mounted) {
           if (isValid) {
-            ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(currentWorkspaceId);
+            ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: currentWorkspaceId);
             const PosRoute().go(context);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -118,7 +118,7 @@ class _WaitingRoomScreenState extends ConsumerState<WaitingRoomScreen> {
         final status = statusData['status'] ?? '';
 
         if (status == QueueStatus.approved.name) {
-          ref.read(currentWorkspaceIdProvider.notifier).setWorkspaceId(currentWorkspaceId);
+          ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId:  currentWorkspaceId);
 
           const PosRoute().go(context);
         } else if (status == QueueStatus.rejected.name) {

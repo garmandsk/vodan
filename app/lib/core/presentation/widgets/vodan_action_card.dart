@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 
-// Widget Pembantu untuk Membuat Kartu Pilihan yang Elegan
 class VodanActionCard extends StatelessWidget {
   const VodanActionCard({
     super.key,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.prefixIcon,
     this.suffixIcon,
     required this.color,
+    this.padding,
+    this.iconSize = 32.0,
+    this.titleSize,
     required this.onTap,
   }); 
   
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final IconData prefixIcon;
   final Widget? suffixIcon;
   final Color color;
+  final double? padding;
+  final double? iconSize;
+  final double? titleSize;
   final VoidCallback onTap;
 
   @override
@@ -32,17 +37,17 @@ class VodanActionCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16), // Efek riak/sentuhan melengkung
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.all(padding ?? 20.0),
           child: Row(
             children: [
               // Ikon Peran
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(iconSize! * 0.375),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(prefixIcon, color: color, size: 32),
+                child: Icon(prefixIcon, color: color, size: iconSize ?? 32),
               ),
               const SizedBox(width: 16),
               
@@ -56,17 +61,20 @@ class VodanActionCard extends StatelessWidget {
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: titleSize ?? 18,
                           ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
-                            height: 1.3,
-                          ),
-                    ),
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                              height: 1.3,
+                              fontSize: 14
+                            ),
+                      ),
+                    ]
                   ],
                 ),
               ),

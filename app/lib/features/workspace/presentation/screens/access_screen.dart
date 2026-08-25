@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
+import 'package:vodan/core/presentation/widgets/pin_barrier.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
+import 'package:vodan/core/providers/admin_session.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/features/workspace/data/repositories/access_repository.dart';
 import 'package:vodan/features/workspace/presentation/controllers/access_controller.dart';
@@ -27,7 +27,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   }
 
   Future<void> _submitPin() async {
-    final workspaceId = ref.read(currentWorkspaceIdProvider);
+    final workspaceId = ref.read(currentWorkspaceProvider)?.id;
     if (workspaceId == null) return;
 
     final pin = _pinController.text;
@@ -36,18 +36,19 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
       return;
     }
 
-    final errorMessage = await ref.read(accessControllerProvider.notifier).openAccessScreen(workspaceId, pin);
+    final errorMessage = await ref.read(adminSessionProvider.notifier).verifyPin(workspaceId, pin);
+    
+    _pinController.clear();
 
     if (errorMessage != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage), backgroundColor: Theme.of(context).colorScheme.error),
       );
-      _pinController.clear();
     }
   }
 
   Future<void> _changeAccessStatus(String sessionId, QueueStatus newStatus) async {
-    final workspaceId = ref.read(currentWorkspaceIdProvider);
+    final workspaceId = ref.read(currentWorkspaceProvider)?.id;
     if (workspaceId == null) return;
 
     try {
@@ -72,7 +73,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   }
 
   Future<void> _processBulkAction(QueueStatus newStatus) async {
-    final workspaceId = ref.read(currentWorkspaceIdProvider);
+    final workspaceId = ref.read(currentWorkspaceProvider)?.id;
     if (workspaceId == null) return;
 
     final errorMessage = await ref.read(accessControllerProvider.notifier).processBulkAction(workspaceId, newStatus);
@@ -96,11 +97,18 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final barrierState = ref.watch(adminSessionProvider);
     final state = ref.watch(accessControllerProvider);
 
     // Layar Terkunci
-    if (!state.isPinVerified) {
-      return _buildPinBarrier(theme, state.isLoading);
+    if (!barrierState.isPinVerified) {
+      return PinBarrier(
+        tffController: _pinController,
+        tffEnabled: !barrierState.isLoading,
+        tffOnFieldSubmitted: (_) => _submitPin(),
+        buttonText: barrierState.isLoading ? 'Memeriksa...' : 'Buka Kunci', 
+        buttonOnPressed: barrierState.isLoading ? null : _submitPin,
+      );
     }
 
     // Layar Terbuka
@@ -145,7 +153,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
         ),
         // Tombol manual untuk Logout/Lock kembali
         floatingActionButton: FloatingActionButton.small(
-          onPressed: () => ref.read(accessControllerProvider.notifier).lockScreen(),
+          onPressed: () => ref.read(adminSessionProvider.notifier).lockScreen(),
           backgroundColor: theme.colorScheme.errorContainer,
           child: Icon(Icons.lock_outline_rounded, color: theme.colorScheme.onErrorContainer),
         ),
@@ -154,58 +162,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   }
 
   // =======================================================================
-  // WIDGET BARIER PIN
-  // =======================================================================
-  Widget _buildPinBarrier(ThemeData theme, bool isLoading) {
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.lock_person_rounded, size: 80, color: theme.colorScheme.primary),
-                const SizedBox(height: 24),
-                Text('Masukkan PIN Keamanan', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text('Halaman ini memuat data sensitif lapak.', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                const SizedBox(height: 32),
-                
-                VodanTextFormField(
-                  controller: _pinController,
-                  hintText: 'PIN Admin',
-                  prefixIcon: Icons.dialpad,
-                  obscureText: true, 
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(6)
-                  ],
-                  onFieldSubmitted: (_) => _submitPin(),
-                ),
-                const SizedBox(height: 24),
-                
-                SizedBox(
-                  width: double.infinity,
-                  child: VodanActionButton(
-                    text: isLoading ? 'Memeriksa...' : 'Buka Kunci',
-                    onPressed: isLoading ? null : _submitPin,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // =======================================================================
-  // WIDGET DAFTAR KASIR (Menggunakan CashierSessionModel)
+  // WIDGET DAFTAR KASIR 
   // =======================================================================
   Widget _buildUserList(List<CashierSessionModel> users, String query, {required bool isPending, required ThemeData theme}) {
     final state = ref.watch(accessControllerProvider);

@@ -4,8 +4,9 @@ part of 'app_router.dart';
 class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
   const WorkspaceListRoute();
 
-  @override  
-  Widget build(BuildContext context, GoRouterState state) => WorkspaceListScreen();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      WorkspaceListScreen();
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
@@ -26,17 +27,20 @@ class WorkspaceListRoute extends GoRouteData with $WorkspaceListRoute {
 class TransactionRoute extends GoRouteData with $TransactionRoute {
   const TransactionRoute();
 
-  @override  
-  Widget build(BuildContext context, GoRouterState state) => TransactionScreen();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TransactionScreen();
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final workspaceId = ProviderScope.containerOf(context).read(currentWorkspaceIdProvider);
-    final cashierSessionId = ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
-    
+    final workspaceId =
+        ProviderScope.containerOf(context).read(currentWorkspaceProvider);
+    final cashierSessionId =
+        ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
+
     if (workspaceId == null || cashierSessionId == null) {
       // print('cashier: $cashierSessionId');
-      return const EnterWorkspaceRoute().location; 
+      return const EnterWorkspaceRoute().location;
     }
     return null;
   }
@@ -44,18 +48,14 @@ class TransactionRoute extends GoRouteData with $TransactionRoute {
 
 @TypedStatefulShellRoute<CashierShellRouteData>(
   branches: <TypedStatefulShellBranch<StatefulShellBranchData>>[
-    TypedStatefulShellBranch<PosBranch>(routes: [
-      TypedGoRoute<PosRoute>(path: '/pos')
-    ]),
-    TypedStatefulShellBranch<HistoryBranch>(routes: [
-      TypedGoRoute<HistoryRoute>(path: '/history')
-    ]),
-    TypedStatefulShellBranch<AccessBranch>(routes: [
-      TypedGoRoute<AccessRoute>(path: '/access')
-    ]),
-    TypedStatefulShellBranch<SettingBranch>(routes: [
-      TypedGoRoute<SettingRoute>(path: '/setting')
-    ])
+    TypedStatefulShellBranch<PosBranch>(
+        routes: [TypedGoRoute<PosRoute>(path: '/pos')]),
+    TypedStatefulShellBranch<HistoryBranch>(
+        routes: [TypedGoRoute<HistoryRoute>(path: '/history')]),
+    TypedStatefulShellBranch<AccessBranch>(
+        routes: [TypedGoRoute<AccessRoute>(path: '/access')]),
+    TypedStatefulShellBranch<SettingBranch>(
+        routes: [TypedGoRoute<SettingRoute>(path: '/setting')])
   ],
 )
 class CashierShellRouteData extends StatefulShellRouteData {
@@ -63,26 +63,40 @@ class CashierShellRouteData extends StatefulShellRouteData {
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final workspaceId = ProviderScope.containerOf(context).read(currentWorkspaceIdProvider);
-    final cashierSessionId = ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
-    
+    final workspaceId =
+        ProviderScope.containerOf(context).read(currentWorkspaceProvider);
+    final cashierSessionId =
+        ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
+
     if (workspaceId == null || cashierSessionId == null) {
       // print('cashier: $cashierSessionId');
-      return const EnterWorkspaceRoute().location; 
+      return const EnterWorkspaceRoute().location;
     }
     return null;
   }
 
   @override
-  Widget builder(BuildContext context, GoRouterState state, StatefulNavigationShell navigationShell) {
+  Widget builder(BuildContext context, GoRouterState state,
+      StatefulNavigationShell navigationShell) {
     return VodanMainScaffold(navigationShell: navigationShell);
   }
 }
 
-class PosBranch extends StatefulShellBranchData { const PosBranch(); }
-class HistoryBranch extends StatefulShellBranchData { const HistoryBranch(); }
-class AccessBranch extends StatefulShellBranchData { const AccessBranch(); }
-class SettingBranch extends StatefulShellBranchData { const SettingBranch(); }
+class PosBranch extends StatefulShellBranchData {
+  const PosBranch();
+}
+
+class HistoryBranch extends StatefulShellBranchData {
+  const HistoryBranch();
+}
+
+class AccessBranch extends StatefulShellBranchData {
+  const AccessBranch();
+}
+
+class SettingBranch extends StatefulShellBranchData {
+  const SettingBranch();
+}
 
 class PosRoute extends GoRouteData with $PosRoute {
   const PosRoute();

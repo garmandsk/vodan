@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vodan/features/workspace_auth/data/models/cashier_session_model.dart';
+import 'package:vodan/features/workspace_auth/data/models/workspace_session_model.dart';
 
 part 'session.g.dart';
 
@@ -12,13 +13,13 @@ SharedPreferences sharedPrefs(Ref ref) {
 @Riverpod(keepAlive: true)
 class CurrentUser extends _$CurrentUser {
   static const _sessionIdKey = 'cashier_session_id';
-  static const _nameKey = 'cashier_name';
+  static const _userNameKey = 'cashier_name';
 
   @override
   CashierSessionModel? build() {
     final prefs = ref.watch(sharedPrefsProvider);
     final sessionId = prefs.getString(_sessionIdKey);
-    final name = prefs.getString(_nameKey);
+    final name = prefs.getString(_userNameKey);
 
     if (sessionId != null && name != null) {
       return CashierSessionModel(sessionId: sessionId, cashierName: name);
@@ -30,7 +31,7 @@ class CurrentUser extends _$CurrentUser {
     final prefs = ref.read(sharedPrefsProvider);
     
     prefs.setString(_sessionIdKey, id);
-    prefs.setString(_nameKey, name);
+    prefs.setString(_userNameKey, name);
     
     state = CashierSessionModel(sessionId: id, cashierName: name);
   }
@@ -39,28 +40,46 @@ class CurrentUser extends _$CurrentUser {
     final prefs = ref.read(sharedPrefsProvider);
     
     prefs.remove(_sessionIdKey);
-    prefs.remove(_nameKey);
+    prefs.remove(_userNameKey);
     
     state = null;
   }
 }
 
 @Riverpod(keepAlive: true)
-class CurrentWorkspaceId extends _$CurrentWorkspaceId {
-  static const _key = 'current_workspace_id';
+class CurrentWorkspace extends _$CurrentWorkspace {
+  static const _workspaceIdKey = 'current_workspace_id';
+  static const _workspaceNameKey = 'current_workspace_name';
 
   @override
-  String? build() {
-    return ref.watch(sharedPrefsProvider).getString(_key);
+  WorkspaceSessionModel? build() {
+    final prefs = ref.watch(sharedPrefsProvider);
+    final workspaceId = prefs.getString(_workspaceIdKey);
+    final workspaceName = prefs.getString(_workspaceNameKey);
+
+    if (workspaceId != null && workspaceName != null) {
+      return WorkspaceSessionModel(id: workspaceId, name: workspaceName);
+    }
   }
 
-  void setWorkspaceId(String id) {
-    state = id;
-    ref.read(sharedPrefsProvider).setString(_key, id);
+  void setWorkspaceSession({
+    required String workspaceId,
+    String? workspaceName
+  }) {
+    final prefs = ref.read(sharedPrefsProvider);
+
+    prefs.setString(_workspaceIdKey, workspaceId);
+    if (workspaceName != null && workspaceName.isNotEmpty) prefs.setString(_workspaceNameKey, workspaceName);
+
+    state = WorkspaceSessionModel(id: workspaceId, name: workspaceName);
   }
 
-  void clearWorkspaceId() {
+  void clearWorkspaceSession() {
+    final prefs = ref.read(sharedPrefsProvider);
+
+    prefs.remove(_workspaceIdKey);
+    prefs.remove(_workspaceNameKey);
+
     state = null;
-    ref.read(sharedPrefsProvider).remove(_key);
   }
 }
