@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 
 class VodanDialog {
   static void show({
@@ -11,13 +12,13 @@ class VodanDialog {
     IconData icon = Icons.info_outline_rounded,
     Color? iconColor,
     VoidCallback? onPressed,
-    List<Widget>? customActions,
+    List<Widget> Function(BuildContext dialogContext)? customActions,
   }) {
     final theme = Theme.of(context);
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: Icon(icon, color: iconColor ?? theme.colorScheme.primary, size: 48),
         title: Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -33,16 +34,17 @@ class VodanDialog {
           ],
         ),
         actionsAlignment: MainAxisAlignment.center,
-        actions: customActions ?? [
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: buttonColor ?? theme.colorScheme.primary),
-            onPressed: () {
-              Navigator.pop(context); 
-              if (onPressed != null) onPressed();
-            },
-            child: Text(buttonText),
-          ),
-        ],
+        actions: customActions != null 
+            ? customActions(dialogContext) 
+            : [
+              VodanActionButton(
+                text: buttonText,
+                onPressed: () {
+                  Navigator.pop(dialogContext); 
+                  if (onPressed != null) onPressed();
+                },
+              ),
+            ],
       ),
     );
   }

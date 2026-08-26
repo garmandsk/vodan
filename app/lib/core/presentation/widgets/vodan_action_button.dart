@@ -4,7 +4,7 @@ class VodanActionButton extends StatelessWidget {
   const VodanActionButton({
     super.key,
     this.height = 50.0,
-    required this.text,
+    this.text,
     this.prefixIcon,
     this.suffixIcon,
     this.backgroundColor,
@@ -17,7 +17,7 @@ class VodanActionButton extends StatelessWidget {
   });
 
   final double height;
-  final String text;
+  final String? text;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final Color? backgroundColor;
@@ -67,13 +67,14 @@ class VodanActionButton extends StatelessWidget {
                         Icon(prefixIcon, size: 20, color: effectiveForegroundColor),
                         const SizedBox(width: 8), 
                       ],
-                      Text(
-                        text,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: effectiveForegroundColor,
-                          fontWeight: FontWeight.bold,
+                      if (text != null)
+                        Text(
+                          text!,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: effectiveForegroundColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
                     ],
                   ),
 

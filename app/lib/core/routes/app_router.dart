@@ -33,6 +33,8 @@ part 'onboarding_routes.dart';
 part 'workspace_auth_routes.dart';
 part 'workspace_routes.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
@@ -55,6 +57,7 @@ GoRouter appRouter(Ref ref) {
   final supabase = ref.watch(supabaseClientProvider);
 
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: SplashRoute().location,
     debugLogDiagnostics: true,
     routes: $appRoutes,

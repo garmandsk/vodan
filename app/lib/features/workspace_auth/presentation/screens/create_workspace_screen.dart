@@ -8,18 +8,10 @@ import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 import 'package:vodan/core/routes/app_router.dart';
+import 'package:vodan/core/utils/ai_form_row.dart';
 import 'package:vodan/features/workspace_auth/presentation/controllers/workspace_auth_controller.dart';
 import '../../data/models/create_workspace_request_model.dart';
 
-class _AiKeyFormRow {
-  String provider = 'Gemini';
-  final TextEditingController keyController = TextEditingController();
-  bool isObscure = true;
-
-  void dispose() {
-    keyController.dispose();
-  }
-}
 class CreateWorkspaceScreen extends ConsumerStatefulWidget {
   const CreateWorkspaceScreen({super.key});
 
@@ -33,7 +25,7 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
   final _nameController = TextEditingController();
   final _adminPinController = TextEditingController();
 
-  final List<_AiKeyFormRow> _aiKeyRows = [_AiKeyFormRow()];
+  final List<AiKeyFormRow> _aiKeyRows = [AiKeyFormRow()];
 
   bool _isAdminPinObscure = true;
 
@@ -42,9 +34,9 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
     if (isLoading) return;
 
     if (_formKey.currentState!.validate()) {
-      final List<AiCredential> aiCredential = _aiKeyRows
+      final List<AiKeys> aiKeys = _aiKeyRows
           .where((row) => row.keyController.text.trim().isNotEmpty)
-          .map((row) => AiCredential(
+          .map((row) => AiKeys(
             provider: row.provider,
             key: row.keyController.text.trim(),
           ))
@@ -53,7 +45,7 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
       final requestData = CreateWorkspaceRequestModel(
         name: _nameController.text.trim(), 
         adminPin: _adminPinController.text.trim(), 
-        aiKeys: aiCredential
+        aiKeys: aiKeys
       );
 
       final String? newWorkspaceId = await ref.read(workspaceAuthControllerProvider.notifier).createWorkspace(requestData);
@@ -269,7 +261,7 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                   prefixIcon: Icons.add,
                   onPressed: isLoading ? null : () {
                     setState(() {
-                      _aiKeyRows.add(_AiKeyFormRow());
+                      _aiKeyRows.add(AiKeyFormRow());
                     });
                   },
                 ),

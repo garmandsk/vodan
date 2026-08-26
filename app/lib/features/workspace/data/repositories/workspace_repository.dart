@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
+import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
 
 part 'workspace_repository.g.dart';
 
@@ -27,6 +28,49 @@ class WorkspaceRepository {
       return data.map((json) => WorkspaceResponseModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Gagal mengambil daftar lapak: $e');
+    }
+  }
+
+  Future<WorkspaceResponseModel> getWorkspaceById(String id) async {
+    try {
+      final response = await _supabase
+          .from('workspaces')
+          .select('id, name')
+          .eq('id', id)
+          .maybeSingle();
+      if (response == null) throw Exception('Lapak tidak dimukan');
+      return WorkspaceResponseModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Gagal mengambil data lapak: $e');
+    }
+  }
+
+  Future<List<AiKeys>> getWorkspaceAiKeys(String workspaceId) async {
+    try {
+      final response = await _supabase
+          .from('workspaces')
+          .select('ai_keys')
+          .eq('id', workspaceId)
+          .maybeSingle();
+      if (response == null) throw Exception('Lapak tidak dimukan');
+      final aiKeysJson = response['ai_keys'] as List?;
+      if (aiKeysJson == null) throw Exception('AI keys tidak ditemukan');
+      return aiKeysJson.map((json) => AiKeys.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil AI key lapak: $e');
+    }
+  }
+
+  Future<bool> getIsSaleBroadcastOn(String workspaceId) async {
+    try {
+      final response = await _supabase
+          .from('workspaces')
+          .select('is_sale_broadcast_on')
+          .eq('id', workspaceId)
+          .single();
+      return response['is_sale_broadcast_on'] as bool? ?? false;
+    } catch (e) {
+      throw Exception('Gagal mengambil status sale broadcast: $e');
     }
   }
 
@@ -76,10 +120,11 @@ class WorkspaceRepository {
 
       final response = await _supabase
           .from('workspaces')
-          .update({'admin_pin': hashedPin})
-          .eq('id', workspaceId);
+          .update({'admin_pin': hashedPin}) 
+          .eq('id', workspaceId)
+          .select('id');
 
-      return response == true;
+      return response.isNotEmpty;
     } catch (e) {
       throw Exception('Gagal ubah pin lapak: $e');
     }
@@ -90,11 +135,38 @@ class WorkspaceRepository {
       final response = await _supabase
           .from('workspaces')
           .update({'name': newName})
-          .eq('id', workspaceId);
+          .eq('id', workspaceId)
+          .select('id');
 
-      return response == true;
+      return response.isNotEmpty;
     } catch (e) {
-      throw Exception('Gagal ubah pin lapak: $e');
+      throw Exception('Gagal ubah nama lapak: $e');
+    }
+  }
+
+  Future<bool> editWorkspaceAiKeys(String workspaceId, List<AiKeys> newAiKeys) async {
+    try {
+      final aiKeysJson = newAiKeys.map((key) => key.toJson()).toList();
+
+      final response = await _supabase
+          .from('workspaces')
+          .update({'ai_keys': aiKeysJson})
+          .eq('id', workspaceId)
+          .select('id');
+      return response.isNotEmpty;
+    } catch (e) {
+      throw Exception('Gagal ubah AI keys lapak: $e');
+    }
+  }
+
+  Future<void> editIsSaleBroadcastOn(String workspaceId, bool isEnabled) async {
+    try {
+      await _supabase
+          .from('workspaces')
+          .update({'is_sale_broadcast_on': isEnabled})
+          .eq('id', workspaceId);
+    } catch (e) {
+      throw Exception('Gagal mengubah status sale broadcast: $e');
     }
   }
 }

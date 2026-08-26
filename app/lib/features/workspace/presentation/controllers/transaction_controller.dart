@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vodan/core/providers/broadcast_service.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
 import 'package:vodan/features/workspace/data/models/cart_item_model.dart';
@@ -83,10 +84,17 @@ class TransactionController extends _$TransactionController {
         status: status
       );
 
-      final repo = ref.read(transactionRepositoryProvider);
-      await repo.createTransaction(transactionData);
+      final transactionRepo = ref.read(transactionRepositoryProvider);
+      await transactionRepo.createTransaction(transactionData);
 
       ref.read(cartControllerProvider.notifier).clearCart();
+
+      final broadcastService = ref.read(broadcastServiceProvider);
+      await broadcastService.sendSaleBroadcast(
+        workspaceId: workspaceId,
+        cashierName: cashierName,
+        totalPrice: totalPrice
+      );
 
       return true; // Berhasil
       

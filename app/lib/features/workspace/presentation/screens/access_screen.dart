@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vodan/core/presentation/widgets/pin_barrier.dart';
+import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 import 'package:vodan/core/providers/admin_session.dart';
 import 'package:vodan/core/providers/session.dart';
+import 'package:vodan/core/utils/responsive_utils.dart';
 import 'package:vodan/features/workspace/data/repositories/access_repository.dart';
 import 'package:vodan/features/workspace/presentation/controllers/access_controller.dart';
 import 'package:vodan/features/workspace_auth/data/models/cashier_session_model.dart';
@@ -97,8 +99,10 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDesktop = context.isDesktop;
     final barrierState = ref.watch(adminSessionProvider);
     final state = ref.watch(accessControllerProvider);
+    final workspaceId = ref.read(currentWorkspaceProvider)!.id;
 
     // Layar Terkunci
     if (!barrierState.isPinVerified) {
@@ -139,7 +143,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
                 onChanged: (value) => ref.read(accessControllerProvider.notifier).updateQuery(value),
               ),
             ),
-            
+
             // Tab View List
             Expanded(
               child: TabBarView(
@@ -152,11 +156,30 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
           ],
         ),
         // Tombol manual untuk Logout/Lock kembali
-        floatingActionButton: FloatingActionButton.small(
-          onPressed: () => ref.read(adminSessionProvider.notifier).lockScreen(),
-          backgroundColor: theme.colorScheme.errorContainer,
-          child: Icon(Icons.lock_outline_rounded, color: theme.colorScheme.onErrorContainer),
-        ),
+        floatingActionButton: Padding(
+          padding: isDesktop
+              ? EdgeInsetsGeometry.only(
+                  left: 16, right: 96, top: 16, bottom: 16)
+              : EdgeInsets.only(left: 16.0, right: 16.0, bottom: 30.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 16,
+            children: [
+              VodanActionButton(
+                text: 'Refresh', 
+                prefixIcon: Icons.replay_rounded,
+                isLoading: state.isLoading,
+                onPressed: () => ref.read(accessControllerProvider.notifier).refresh(workspaceId)
+              ),
+              FloatingActionButton.small(
+                onPressed: () => ref.read(adminSessionProvider.notifier).lockScreen(),
+                backgroundColor: theme.colorScheme.errorContainer,
+                child: Icon(Icons.lock_outline_rounded, color: theme.colorScheme.onErrorContainer),
+              ),
+            ],
+          ),
+        )
       ),
     );
   }

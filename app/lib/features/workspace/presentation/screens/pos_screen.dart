@@ -5,6 +5,9 @@ import 'package:vodan/core/presentation/widgets/vodan_category.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dialog.dart';
 import 'package:vodan/core/presentation/widgets/vodan_quantity_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
+import 'package:vodan/core/presentation/widgets/vodan_top_notification.dart';
+import 'package:vodan/core/providers/broadcast_service.dart';
+import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/utils/app_format.dart';
 import 'package:vodan/core/utils/responsive_utils.dart';
@@ -21,6 +24,43 @@ class PosScreen extends ConsumerStatefulWidget {
 
 class _PosScreenState extends ConsumerState<PosScreen> {
   final TextEditingController _searchController = TextEditingController();
+
+  void _initializeBroadcast() {
+    final workspaceId = ref.read(currentWorkspaceProvider)?.id;
+    if (workspaceId == null) return;
+
+    ref.read(broadcastServiceProvider).subscribeToWorkspace(
+      workspaceId: workspaceId, 
+      onNewSale: (payload) {
+        final isBroadcastEnabled = ref.read(currentWorkspaceProvider)!.isSaleBroadcastOn;
+        if (!isBroadcastEnabled) return;
+
+        final String cashierName = payload['cashier_name'] ?? 'Kasir-Anonim';
+        final int price = payload['total_price'] ?? 0;
+        final formattedAmount = AppFormat.currency(price);
+
+        final currentContext = navigatorKey.currentContext;
+        if (currentContext == null) return;
+
+        VodanTopNotification.show(
+          context: currentContext, 
+          overlayState: navigatorKey.currentState?.overlay,
+          title: 'Penjualan Baru! 🎉', 
+          message: '$cashierName baru saja melakukan penjualan senilai $formattedAmount',
+          backgroundColor: Theme.of(context).colorScheme.primary
+        );
+      }
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeBroadcast();
+    });
+  }
 
   @override
   void dispose() {

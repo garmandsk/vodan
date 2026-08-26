@@ -5,18 +5,21 @@ import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:vodan/core/presentation/widgets/pin_barrier.dart';
+import 'package:vodan/core/presentation/widgets/vodan_dropdown.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_bottom_sheet.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dialog.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
 import 'package:vodan/core/presentation/widgets/vodan_tff_card.dart';
+import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/providers/admin_session.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
+import 'package:vodan/core/utils/ai_form_row.dart';
 import 'package:vodan/core/utils/responsive_utils.dart';
-import 'package:vodan/features/workspace/presentation/controllers/setting_controller.dart';
 import 'package:vodan/features/workspace/presentation/controllers/workspace_controller.dart';
+import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -97,29 +100,35 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     }
   }
 
-  // Dialog Tampilkan info lapak
-  void _showInfoDialog(String workspaceId) {
+  // Bottomsheet Tampilkan info lapak
+  void _showInfoBottomSheet(String workspaceId) {
     final String joinLink = 'https://vodan.app/join?id=$workspaceId';
 
-    final initialName = ref.watch(currentWorkspaceProvider)?.name ?? 'Lapak Anonim';
-    String displayName = initialName;
+    final initialName = ref.read(currentWorkspaceProvider)?.name ?? 'Lapak Anonim';
     final nameController = TextEditingController(text: initialName);
     bool isEditing = false;
     bool isLoading = false;
 
-    VodanDialog.show(
+    VodanBottomSheet.show(
       context: context,
-      title: 'Informasi Lapak',
-      icon: Icons.storefront_rounded, 
-      customContent: StatefulBuilder(
+      isDismissible: true,
+      child: StatefulBuilder(
         builder: (context, setStateModal) {
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
-            spacing: 16,
             children: [
-              // Nama lapak
+              VodanHeader(
+                crossAlign: CrossAxisAlignment.start,
+                title: 'Informasi Lapak',
+                titleStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                subtitle: 'Ubah nama atau Scan & Bagikan QR dibawah',
+                subtitleStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
+
+              // --- Nama Lapak ---
               VodanTffCard(
                 title: 'Nama Lapak',
                 controller: nameController,
@@ -155,22 +164,28 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   }
                 },
               ),
+              const SizedBox(height: 16),
               
+              // --- ID Lapak ---
               VodanActionCard(
                 title: 'Ketuk untuk menyalin ID Lapak',
                 subtitle: '${workspaceId.substring(0, 8)}...',
-                prefixIcon: Icons.fingerprint_rounded,
+                prefixIcon: Icons.commit_rounded,
                 color: Theme.of(context).colorScheme.secondary,
                 suffixIcon: const Icon(Icons.copy_rounded, size: 20, color: Colors.grey),
                 padding: 12,
                 iconSize: 22.0,
-                titleSize: 10.0,
-                onTap: () => _copy(context, workspaceId), // Langsung salin saat kartu diklik!
+                titleSize: 12.0,
+                onTap: () => _copy(context, workspaceId),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-              // QR CODE
-              Text('QR Code Lapak'),
+              // --- QR Code Lapak ---
+              const Text(
+                'QR Code Akses Lapak', 
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -179,16 +194,17 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   border: Border.all(color: Colors.grey.shade300),
                 ),
                 child: SizedBox(
-                  width: 180,
-                  height: 180,
+                  width: 160,
+                  height: 160,
                   child: QrImageView(
                     data: joinLink,
                     version: QrVersions.auto,
-                    size: 180,
+                    size: 160,
                     backgroundColor: Colors.white,
                   ),
                 ),
               ),
+              const SizedBox(height: 16), // Jangka aman bawah untuk SafeArea
             ],
           );
         },
@@ -213,19 +229,15 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Judul
-                Text(
-                  'Ganti PIN Lapak',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                VodanHeader(
+                  crossAlign: CrossAxisAlignment.start,
+                  title: 'Ganti PIN Lapak',
+                  titleStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  subtitle: 'Masukkan PIN baru untuk keamanan admin lapak ini.',
+                  subtitleStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Masukkan PIN baru untuk keamanan admin lapak ini.',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-                const SizedBox(height: 24),
 
                 // Input PIN Baru
                 VodanTextFormField(
@@ -318,13 +330,338 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     );
   }
 
+  void _showApiKeysBottomSheet(String workspaceId, bool isDesktop) {
+    final aiKeysFuture = ref
+        .read(workspaceControllerProvider.notifier)
+        .getWorkspaceAiKeys(workspaceId);
+
+    final formKey = GlobalKey<FormState>();
+    final rows = <AiKeyFormRow>[];
+
+    bool isEditing = false;
+    bool isLoading = false;
+    bool initialized = false;
+
+    VodanBottomSheet.show(
+      context: context,
+      isDismissible: true,
+      child: StatefulBuilder(
+        builder: (context, setStateModal) {
+          return FutureBuilder<List<AiKeys>?>(
+            future: aiKeysFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text('Gagal memuat API keys'),
+                );
+              }
+
+              if (!initialized) {
+                final keys = snapshot.data ?? [];
+
+                rows.addAll(
+                  keys.map(
+                    (key) => AiKeyFormRow(
+                      provider: key.provider,
+                      key: key.key,
+                    ),
+                  ),
+                );
+
+                if (rows.isEmpty) {
+                  rows.add(AiKeyFormRow());
+                }
+
+                initialized = true;
+              }
+
+              Future<void> saveAiKeys() async {
+                if (!(formKey.currentState?.validate() ?? false)) return;
+
+                setStateModal(() => isLoading = true);
+
+                final newAiKeys = rows
+                    .map(
+                      (row) => AiKeys(
+                        provider: row.provider,
+                        key: row.keyController.text.trim(),
+                      ),
+                    )
+                    .toList();
+
+                final errorMessage = await ref
+                    .read(workspaceControllerProvider.notifier)
+                    .editWorkspaceAiKeys(workspaceId, newAiKeys);
+
+                if (!context.mounted) return;
+
+                setStateModal(() => isLoading = false);
+
+                if (errorMessage == null) {
+                  setStateModal(() => isEditing = false);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('AI keys berhasil diubah!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMessage),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+
+              return Form(
+                key: formKey,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height *  0.7,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        VodanHeader(
+                          crossAlign: CrossAxisAlignment.start,
+                          title: 'AI API Keys',
+                          titleStyle: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          subtitle: 'Kelola integrasi AI API Keys untuk lapak ini.',
+                          subtitleStyle: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                        ),
+                    
+                        if (!isEditing) ...[
+                          if (rows.isEmpty)
+                            const Center(child: Text('Tidak ada API keys'))
+                          else
+                            ...rows.map(
+                              (row) => VodanActionCard(
+                                title: row.provider,
+                                subtitle: row.keyController.text,
+                                prefixIcon: Icons.vpn_key_rounded,
+                                color: Colors.purple.shade100,
+                                onTap: () {},
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: VodanActionButton(
+                                text: 'Ubah AI Keys',
+                                onPressed: () {
+                                  setStateModal(() => isEditing = true);
+                                },
+                              ),
+                            ),
+                        ] else ...[
+                          ...rows.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final row = entry.value;
+                    
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: VodanDropdown(
+                                          initialValue: row.provider,
+                                          labelText: 'Provider',
+                                          icon: Icons.assistant,
+                                          items: const [
+                                            DropdownMenuItem(
+                                              value: 'Gemini',
+                                              child: Text('Gemini'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 'OpenAI',
+                                              child: Text('OpenAI'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 'Claude',
+                                              child: Text('Claude'),
+                                            ),
+                                          ],
+                                          onChanged: isLoading
+                                              ? null
+                                              : (value) {
+                                                  if (value == null) return;
+                                                        
+                                                  setStateModal(() {
+                                                    row.provider = value;
+                                                  });
+                                                },
+                                        ),
+                                      ),
+                                                        
+                                      const SizedBox(width: 12),
+                                                        
+                                      Expanded(
+                                        flex: 2,
+                                        child: VodanTextFormField(
+                                          controller: row.keyController,
+                                          labelText: 'API Key',
+                                          prefixIcon: Icons.key_rounded,
+                                          obscureText: row.isObscure,
+                                          enabled: !isLoading,
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              row.isObscure
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                            ),
+                                            onPressed: () {
+                                              setStateModal(() {
+                                                row.isObscure = !row.isObscure;
+                                              });
+                                            },
+                                          ),
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.trim().isEmpty) {
+                                              return 'API Key wajib diisi';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                                        
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete_outline,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: isLoading || rows.length <= 1
+                                            ? null
+                                            : () {
+                                                setStateModal(() {
+                                                  row.dispose();
+                                                  rows.removeAt(index);
+                                                });
+                                              },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                    
+                          VodanActionButton(
+                            text: 'Tambah Key',
+                            prefixIcon: Icons.add,
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    setStateModal(() {
+                                      rows.add(AiKeyFormRow());
+                                    });
+                                  },
+                          ),
+                    
+                          const SizedBox(height: 24),
+                    
+                          SizedBox(
+                            width: double.infinity,
+                            child: VodanActionButton(
+                              text: isLoading ? 'Menyimpan...' : 'Simpan AI Keys',
+                              onPressed: isLoading ? null : saveAiKeys,
+                            ),
+                          ),
+                        ],
+                    
+                        SizedBox(height: isDesktop ? 0 : 30),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void _showDeleteWorkspaceDialog(String workspaceId) {
+    VodanDialog.show(
+      context: context, 
+      title: 'Hapus Lapak ?',
+      message: 'Aksi yang dilakukan tidak dapat dikembalikan',
+      customActions: (dialogContext) => [
+        VodanActionButton(
+          text: 'Batal', 
+          prefixIcon: Icons.cancel_rounded,
+          onPressed: () {
+            Navigator.pop(dialogContext);
+          }
+        ),
+
+        const SizedBox(width: 16,),
+
+        VodanActionButton(
+          text: 'Hapus', 
+          prefixIcon: Icons.delete_forever_rounded,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          onPressed: () async {
+            final errorMessage = await ref.read(workspaceControllerProvider.notifier).deleteWorkspace(workspaceId);
+
+            if (context.mounted) {
+              Navigator.pop(dialogContext);
+
+              if (errorMessage == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Lapak berhasil dihapus'),
+                    duration: const Duration(seconds: 2),
+                  )
+                );
+                EnterWorkspaceRoute().go(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(errorMessage),
+                    duration: const Duration(seconds: 2),
+                  )
+                );
+              }
+            }
+          }
+        )
+      ]
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDesktop = context.isDesktop || context.isTablet;
 
     final barrierState = ref.watch(adminSessionProvider);
-    final state = ref.watch(settingControllerProvider);
+    final saleBroadcastState = ref.watch(currentWorkspaceProvider)!.isSaleBroadcastOn;
     final workspaceId = ref.watch(currentWorkspaceProvider)?.id ?? 'ID_TIDAK_DITEMUKAN';
     final workspaceName = ref.watch(currentWorkspaceProvider)?.name ?? 'Lapak Anonim';
 
@@ -345,7 +682,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           // Header
           Builder(
             builder: (cardContext) {
-              // TODO: ganti nama lapak
               return VodanActionCard(
                 title: workspaceName, 
                 subtitle: 'ID: ${workspaceId.substring(0, 8)}...', 
@@ -356,7 +692,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                   onPressed: () => _shareWorkspace(cardContext, workspaceId)
                 ), 
                 color: theme.colorScheme.primary, 
-                onTap: () => _showInfoDialog(workspaceId),
+                onTap: () => _showInfoBottomSheet(workspaceId),
               );
             }
           ),
@@ -385,16 +721,24 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           _buildSectionTitle('Preferensi Penjualan'),
           VodanActionCard(
             title: 'Siaran Penjualan',
-            subtitle: 'Notifikasi kasir lain saat ada struk baru.',
+            subtitle: 'Notifikasi kasir lain saat ada transaksi baru.',
             prefixIcon: Icons.campaign_rounded,
             color: Colors.blue,
             suffixIcon: Switch(
-              value: state.isBroadcastEnabled,
-              onChanged: (val) => ref.read(settingControllerProvider.notifier).toggleBroadcast(val),
+              value: saleBroadcastState,
               activeThumbColor: Colors.blue,
+              onChanged: (bool _) async {
+                final errorMessage = await ref.read(workspaceControllerProvider.notifier).toggleSaleBroadcast(workspaceId, saleBroadcastState);
+
+                if (errorMessage != null && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(errorMessage))
+                  );
+                }
+              }
             ),
             onTap: () {
-              ref.read(settingControllerProvider.notifier).toggleBroadcast(!state.isBroadcastEnabled);
+              ref.read(workspaceControllerProvider.notifier).toggleSaleBroadcast(workspaceId, !saleBroadcastState);
             },
           ),
           const SizedBox(height: 8),
@@ -410,11 +754,11 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           // SECTION 3: KECERDASAN BUATAN
           _buildSectionTitle('Kecerdasan Buatan (AI)'),
           VodanActionCard(
-            title: 'Kredensial & API Keys',
-            subtitle: 'Kelola integrasi Gemini AI.',
+            title: 'AI API Keys',
+            subtitle: 'Kelola integrasi AI API Keys Anda',
             prefixIcon: Icons.smart_toy_rounded,
             color: Colors.purple,
-            onTap: () {},
+            onTap: () => _showApiKeysBottomSheet(workspaceId, isDesktop),
           ),
           const SizedBox(height: 48),
 
@@ -425,20 +769,21 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             subtitle: 'Tindakan ini tidak dapat dikembalikan.',
             prefixIcon: Icons.delete_forever_rounded,
             color: Colors.red,
-            onTap: () {
-              VodanDialog.show(
-                context: context, 
-                title: 'Hapus Lapak ?'
-              );
-            },
+            onTap: () => _showDeleteWorkspaceDialog(workspaceId),
           ),
           const SizedBox(height: 32),
         ],
       ),
-      floatingActionButton: FloatingActionButton.small(
-        onPressed: () => ref.read(adminSessionProvider.notifier).lockScreen(),
-        backgroundColor: theme.colorScheme.errorContainer,
-        child: Icon(Icons.lock_outline_rounded, color: theme.colorScheme.onErrorContainer),
+      floatingActionButton: Padding(
+        padding: isDesktop
+              ? EdgeInsetsGeometry.only(
+                  left: 16, right: 96, top: 16, bottom: 16)
+              : EdgeInsets.only(left: 16.0, right: 16.0, bottom: 30.0),
+        child: FloatingActionButton.small(
+          onPressed: () => ref.read(adminSessionProvider.notifier).lockScreen(),
+          backgroundColor: theme.colorScheme.errorContainer,
+          child: Icon(Icons.lock_outline_rounded, color: theme.colorScheme.onErrorContainer),
+        ),
       ),
     );
   }

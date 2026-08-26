@@ -64,11 +64,12 @@ class CashierShellRouteData extends StatefulShellRouteData {
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
     final workspaceId =
-        ProviderScope.containerOf(context).read(currentWorkspaceProvider);
+        ProviderScope.containerOf(context).read(currentWorkspaceProvider)?.id;
     final cashierSessionId =
         ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
 
     if (workspaceId == null || cashierSessionId == null) {
+
       // print('cashier: $cashierSessionId');
       return const EnterWorkspaceRoute().location;
     }

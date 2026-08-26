@@ -1,8 +1,15 @@
-class AiCredential {
-  AiCredential({required this.provider, required this.key});
+class AiKeys {
+  AiKeys({required this.provider, required this.key});
 
   final String provider;
   final String key;
+
+  factory AiKeys.fromJson(Map<String, dynamic> json) {
+    return AiKeys(
+      provider: json['provider'] as String,
+      key: json['key'] as String,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -21,7 +28,7 @@ class CreateWorkspaceRequestModel {
 
   final String name;
   final String adminPin;
-  final List<AiCredential> aiKeys;
+  final List<AiKeys> aiKeys;
 
   Map<String, dynamic> toJson() {
     return {

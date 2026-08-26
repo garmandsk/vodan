@@ -50,28 +50,40 @@ class CurrentUser extends _$CurrentUser {
 class CurrentWorkspace extends _$CurrentWorkspace {
   static const _workspaceIdKey = 'current_workspace_id';
   static const _workspaceNameKey = 'current_workspace_name';
+  static const _saleBroadcastKey = 'current_workspace_broadcast';
 
   @override
   WorkspaceSessionModel? build() {
     final prefs = ref.watch(sharedPrefsProvider);
     final workspaceId = prefs.getString(_workspaceIdKey);
     final workspaceName = prefs.getString(_workspaceNameKey);
+    final isSaleBroadcastOn = prefs.getBool(_saleBroadcastKey) ?? true;
 
     if (workspaceId != null && workspaceName != null) {
-      return WorkspaceSessionModel(id: workspaceId, name: workspaceName);
+      return WorkspaceSessionModel(
+        id: workspaceId, 
+        name: workspaceName,
+        isSaleBroadcastOn: isSaleBroadcastOn
+      );
     }
   }
 
   void setWorkspaceSession({
     required String workspaceId,
-    String? workspaceName
+    String? workspaceName,
+    bool isSaleBroadcastOn = false
   }) {
     final prefs = ref.read(sharedPrefsProvider);
 
     prefs.setString(_workspaceIdKey, workspaceId);
+    prefs.setBool(_saleBroadcastKey, isSaleBroadcastOn);
     if (workspaceName != null && workspaceName.isNotEmpty) prefs.setString(_workspaceNameKey, workspaceName);
 
-    state = WorkspaceSessionModel(id: workspaceId, name: workspaceName);
+    state = WorkspaceSessionModel(
+      id: workspaceId, 
+      name: workspaceName,
+      isSaleBroadcastOn: isSaleBroadcastOn
+    );
   }
 
   void clearWorkspaceSession() {
@@ -79,7 +91,17 @@ class CurrentWorkspace extends _$CurrentWorkspace {
 
     prefs.remove(_workspaceIdKey);
     prefs.remove(_workspaceNameKey);
+    prefs.remove(_saleBroadcastKey);
 
     state = null;
+  }
+
+  void updateSaleBroadcastStatus(bool newValue) {
+    if (state == null) return;
+
+    final prefs = ref.read(sharedPrefsProvider);
+    prefs.setBool(_saleBroadcastKey, newValue);
+
+    state = state!.copyWith(isSaleBroadcastOn: newValue);
   }
 }

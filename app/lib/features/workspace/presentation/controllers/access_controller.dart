@@ -32,12 +32,13 @@ class AccessState {
     Set<String>? selectedPendingUserIds,
   }) {
     return AccessState(
-        isLoading: isLoading ?? this.isLoading,
-        searchQuery: searchQuery ?? this.searchQuery,
-        pendingUsers: pendingUsers ?? this.pendingUsers,
-        approvedUsers: approvedUsers ?? this.approvedUsers,
-        selectedPendingUserIds:
-            selectedPendingUserIds ?? this.selectedPendingUserIds);
+      isLoading: isLoading ?? this.isLoading,
+      searchQuery: searchQuery ?? this.searchQuery,
+      pendingUsers: pendingUsers ?? this.pendingUsers,
+      approvedUsers: approvedUsers ?? this.approvedUsers,
+      selectedPendingUserIds:
+      selectedPendingUserIds ?? this.selectedPendingUserIds
+    );
   }
 }
 
@@ -53,7 +54,7 @@ class AccessController extends _$AccessController {
 
     final workspaceId = ref.watch(currentWorkspaceProvider)?.id;
     if (workspaceId != null && workspaceId.isNotEmpty) {
-      // _refresh(workspaceId);
+      // refresh(workspaceId);
 
       _realtimeChannel = ref
           .read(supabaseClientProvider)
@@ -69,7 +70,7 @@ class AccessController extends _$AccessController {
               callback: (payload) {
                 print(
                     '🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
-                _refresh(workspaceId);
+                refresh(workspaceId);
               })
           .subscribe((statuc, [error]) {
         // print('📡 Status Realtime: $status');
@@ -85,14 +86,20 @@ class AccessController extends _$AccessController {
   void _pingSession() =>
       ref.read(adminSessionProvider.notifier).refreshSession();
 
-  Future<void> _refresh(String workspaceId) async {
+  Future<void> refresh(String workspaceId) async {
+    state = state.copyWith(isLoading: true);
     try {
       final accessRepo = ref.read(accessRepositoryProvider);
       final pending = await accessRepo.getPendingUsers(workspaceId);
       final approved = await accessRepo.getApprovedUsers(workspaceId);
 
-      state = state.copyWith(pendingUsers: pending, approvedUsers: approved);
+      state = state.copyWith(
+        isLoading: false,
+        pendingUsers: pending, 
+        approvedUsers: approved
+      );
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       print('Gagal memuat ulang: $e');
     }
   }
@@ -150,7 +157,7 @@ class AccessController extends _$AccessController {
       await repo.setBulkAccessStatus(
           workspaceId, state.selectedPendingUserIds.toList(), status);
 
-      await _refresh(workspaceId);
+      await refresh(workspaceId);
 
       state = state.copyWith(
         isLoading: false,

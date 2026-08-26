@@ -88,6 +88,7 @@ class _WorkspaceCreatedScreenState extends ConsumerState<WorkspaceCreatedScreen>
               VodanActionButton(
                 text: 'Masuk ke Lapak', 
                 onPressed: () {
+                  
                   final name =
                   ref.watch(getAccountProvider)?.userMetadata?['name'] ??
                       'Anonim';

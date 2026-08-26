@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
@@ -58,6 +59,14 @@ class _EnterWorkspaceScreenState extends ConsumerState<EnterWorkspaceScreen> {
                 },
               )
             ),
+
+            VodanActionButton(
+              text: 'Mau buat Lapak? Klik di sini', 
+              backgroundColor: Theme.of(context).colorScheme.onPrimary,
+              foregroundColor: Theme.of(context).colorScheme.primary,
+              elevation: 0,
+              onPressed: () => const CreateWorkspaceRoute().go(context)
+            )
           ],
         ),
       ),
