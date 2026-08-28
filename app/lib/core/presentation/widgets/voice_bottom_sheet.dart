@@ -45,7 +45,7 @@ class _VoiceBottomSheetState extends ConsumerState<VoiceBottomSheet> {
 
   @override
   void dispose(){
-    print('controller dihapus');
+    // print('controller dihapus');
 
     _userController.dispose();
     _aiController.dispose();
@@ -345,7 +345,7 @@ class _VoiceBottomSheetState extends ConsumerState<VoiceBottomSheet> {
           max: 2.0,
           divisions: 15,
           onChanged: (val) {
-            print('ngubah rate ke $val');
+            // print('ngubah rate ke $val');
             // Update konfigurasi secara real-time
             ref.read(ttsServiceControllerProvider.notifier).setRate(val);
           },

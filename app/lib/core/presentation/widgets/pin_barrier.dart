@@ -23,7 +23,7 @@ class PinBarrier extends StatelessWidget {
     this.tffOnChanged,
     this.tffOnFieldSubmitted,
     this.tffOnSubmitted,
-    required this.tffEnabled,
+    this.tffEnabled,
     this.tffMaxLines,
     this.tffInputFormatters,
     this.tffTextAlign,
@@ -61,7 +61,7 @@ class PinBarrier extends StatelessWidget {
   final void Function(String)? tffOnChanged;
   final void Function(String)? tffOnFieldSubmitted;
   final ValueChanged<String>? tffOnSubmitted;
-  final bool tffEnabled;
+  final bool? tffEnabled;
   final int? tffMaxLines;
   final List<TextInputFormatter>? tffInputFormatters;
   final TextAlign? tffTextAlign;

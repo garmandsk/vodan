@@ -17,9 +17,11 @@ class VodanMainScaffold extends ConsumerStatefulWidget {
   const VodanMainScaffold({
     super.key,
     required this.navigationShell,
+    this.useSafeArea = true,
   });
 
   final StatefulNavigationShell navigationShell;
+  final bool? useSafeArea;
 
   @override
   ConsumerState<VodanMainScaffold> createState() => _VodanMainScaffoldState();
@@ -181,13 +183,17 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
     ];
 
     String currentTitle = 'Kasir';
-    if (widget.navigationShell.currentIndex == 1)
-      currentTitle = 'Riwayat Transaksi';
-    if (widget.navigationShell.currentIndex == 2) currentTitle = 'Daftar Akses';
-    if (widget.navigationShell.currentIndex == 3)
-      currentTitle = 'Pengaturan Lapak';
+    switch (widget.navigationShell.currentIndex) {
+      case 1:
+        currentTitle = 'Riwayat Transaksi';
+      case 2:
+        currentTitle = 'Daftar Akses';
+      case 3:
+        currentTitle = 'Pengaturan Lapak';
+    }
 
     final user = ref.watch(accountRepositoryProvider).currentUser;
+    final cashier = ref.watch(currentCashierProvider);
     final name =
         user?.userMetadata?['name'] ?? user?.email?.split('@')[0] ?? 'Anonim';
     final workspaceId = ref.watch(currentWorkspaceProvider)?.id;
@@ -199,48 +205,48 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
         voiceState == VoiceState.successChat ||
         voiceState == VoiceState.error;
 
+    final body = isDesktop
+        ? Row(
+            children: [
+              NavigationRail(
+                selectedIndex: widget.navigationShell.currentIndex,
+                onDestinationSelected: _goBranch,
+                extended: MediaQuery.sizeOf(context).width >= 900,
+                backgroundColor: theme.colorScheme.surface,
+                indicatorColor: theme.colorScheme.primaryContainer,
+                selectedLabelTextStyle: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold),
+                destinations: destinations.map((dest) {
+                  return NavigationRailDestination(
+                    icon: Icon(dest.icon),
+                    selectedIcon: Icon(dest.selectedIcon),
+                    label: Text(dest.label),
+                  );
+                }).toList(),
+              ),
+              const VerticalDivider(thickness: 1, width: 1),
+              Expanded(child: widget.navigationShell),
+            ],
+          )
+        : widget.navigationShell;
+
     return Scaffold(
       key: _scaffoldKey,
-      appBar: isDesktop
-          ? null
-          : AppBar(
-              title: Text(currentTitle),
-              automaticallyImplyLeading: false,
-              actions: [
-                if (name != 'Anonim')
-                  VodanBadge(
-                    text: name,
-                    radius: 18,
-                    onTap: () => AccountBottomSheet.show(context),
-                  ),
-                const SizedBox(width: 16),
-              ],
+      appBar: AppBar(
+        title: Text(currentTitle),
+        automaticallyImplyLeading: false,
+        actions: [
+          if (name != 'Anonim')
+            VodanBadge(
+              text: name,
+              radius: 18,
+              onTap: () => AccountBottomSheet.show(context),
             ),
-      body: isDesktop
-          ? Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: widget.navigationShell.currentIndex,
-                  onDestinationSelected: _goBranch,
-                  extended: MediaQuery.sizeOf(context).width >= 900,
-                  backgroundColor: theme.colorScheme.surface,
-                  indicatorColor: theme.colorScheme.primaryContainer,
-                  selectedLabelTextStyle: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold),
-                  destinations: destinations.map((dest) {
-                    return NavigationRailDestination(
-                      icon: Icon(dest.icon),
-                      selectedIcon: Icon(dest.selectedIcon),
-                      label: Text(dest.label),
-                    );
-                  }).toList(),
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: widget.navigationShell),
-              ],
-            )
-          : widget.navigationShell,
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: widget.useSafeArea == true ? SafeArea(child: body) : body,
       floatingActionButtonLocation: isDesktop
           ? FloatingActionButtonLocation.endFloat
           : const FixedCenterDockedFabLocation(),
@@ -336,13 +342,14 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
           ),
         );
       }),
-      bottomNavigationBar:
-          isDesktop ? null : _buildFlatBottomBar(context, theme, destinations),
+      bottomNavigationBar: isDesktop
+          ? null
+          : _buildFlatBottomBar(context, theme, destinations, cashier),
     );
   }
 
   Widget _buildFlatBottomBar(BuildContext context, ThemeData theme,
-      List<_NavigationDestination> destinations) {
+      List<_NavigationDestination> destinations, cashierState) {
     return Container(
       height: 65,
       decoration: BoxDecoration(
@@ -358,18 +365,31 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              _buildNavItem(context, 0, destinations[0], theme),
-              _buildNavItem(context, 1, destinations[1], theme),
-            ],
-          ),
-          Row(
-            children: [
-              _buildNavItem(context, 2, destinations[2], theme),
-              _buildNavItem(context, 3, destinations[3], theme),
-            ],
-          ),
+          if (cashierState.isAdmin) ...[
+            Row(
+              children: [
+                _buildNavItem(context, 0, destinations[0], theme),
+                _buildNavItem(context, 1, destinations[1], theme),
+              ],
+            ),
+            Row(
+              children: [
+                _buildNavItem(context, 2, destinations[2], theme),
+                _buildNavItem(context, 3, destinations[3], theme),
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                _buildNavItem(context, 0, destinations[0], theme),
+              ],
+            ),
+            Row(
+              children: [
+                _buildNavItem(context, 1, destinations[1], theme),
+              ],
+            ),
+          ]
         ],
       ),
     );

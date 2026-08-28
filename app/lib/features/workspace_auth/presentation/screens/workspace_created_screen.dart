@@ -10,6 +10,7 @@ import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/features/account/presentation/controllers/account_controller.dart';
+import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 
 class WorkspaceCreatedScreen extends ConsumerStatefulWidget {
   const WorkspaceCreatedScreen({
@@ -87,16 +88,27 @@ class _WorkspaceCreatedScreenState extends ConsumerState<WorkspaceCreatedScreen>
               
               VodanActionButton(
                 text: 'Masuk ke Lapak', 
-                onPressed: () {
-                  
-                  final name =
-                  ref.watch(getAccountProvider)?.userMetadata?['name'] ??
-                      'Anonim';
-                  // print('name: $name');
-                  final sessionId = 'admin-session-${widget.workspaceId}'; 
-                  ref.read(currentUserProvider.notifier).setSession(name: name, id: sessionId);
-                  ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: widget.workspaceId);
-                  PosRoute().go(context);
+                onPressed: () async {
+                  try {
+                    final name =
+                    ref.read(getAccountProvider)?.userMetadata?['name'] ??
+                        'Anonim';
+                    // print('name: $name');
+
+                    ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: widget.workspaceId);
+
+                    await ref.read(waitingRoomControllerProvider.notifier).joinAsOwner(widget.workspaceId, name);
+
+                    if (context.mounted) {
+                      PosRoute().go(context);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Gagal masuk: $e'), backgroundColor: Theme.of(context).colorScheme.error,)
+                      );
+                    }
+                  }
                 }
               ),
             ],

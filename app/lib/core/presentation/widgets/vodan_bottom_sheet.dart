@@ -12,14 +12,14 @@ class VodanBottomSheet extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final bool? isDismissible;
 
-  static Future<T?> show<T>({
-    required BuildContext context,
-    required Widget child,
-    bool isScrollControlled = true,
-    bool isDismissible = true
-  }) {
+  static Future<T?> show<T>(
+      {required BuildContext context,
+      required Widget child,
+      bool isScrollControlled = true,
+      bool isDismissible = true}) {
     return showModalBottomSheet<T>(
       context: context,
+      // useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       useSafeArea: true,
@@ -34,13 +34,14 @@ class VodanBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
-      padding: padding ?? EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 24.0 + keyboardPadding),
+      padding: padding ??
+          EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 24.0 + keyboardPadding),
       child: Column(
-        mainAxisSize: MainAxisSize.min, 
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Center(
@@ -48,14 +49,17 @@ class VodanBottomSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 24),
-          
-          child,
+          Flexible(
+            fit: FlexFit.loose,
+            child: child,
+          ),
         ],
       ),
     );

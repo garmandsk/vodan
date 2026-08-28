@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vodan/core/presentation/widgets/account_bottom_sheet.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
+import 'package:vodan/core/presentation/widgets/vodan_badge.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
-import 'package:vodan/core/presentation/widgets/vodan_scaffold.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/features/account/presentation/controllers/account_controller.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
 import 'package:vodan/features/workspace/presentation/controllers/workspace_controller.dart';
+import 'package:vodan/features/workspace_auth/presentation/controllers/waiting_room_controller.dart';
 
 class WorkspaceListScreen extends ConsumerStatefulWidget {
   const WorkspaceListScreen({super.key});
@@ -22,9 +24,22 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
   @override
   Widget build(BuildContext context) {
     final workspaces = ref.watch(workspaceControllerProvider);
+    final name = ref.watch(getAccountProvider)?.userMetadata?['name'];
 
-    return VodanScaffold(
-      title: 'Pilih lapak',
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Pilih Lapak'),
+        automaticallyImplyLeading: false,
+        actions: [
+          if (name != 'Anonim')
+            VodanBadge(
+              text: name,
+              radius: 18,
+              onTap: () => AccountBottomSheet.show(context),
+            ),
+          const SizedBox(width: 16),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -37,6 +52,11 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
               title: 'Lapak Saya',
               subtitle: 'Gasken',
             ),
+            if (workspaces.value?.isNotEmpty == true)
+              VodanActionButton(
+                  text: 'Buat Lapak Baru ?',
+                  prefixIcon: Icons.create_new_folder_rounded,
+                  onPressed: () => CreateWorkspaceRoute().push(context)),
             Expanded(
               child: workspaces.when(
                 data: (workspaces) {
@@ -102,18 +122,29 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
             prefixIcon: Icons.store_rounded,
             color: Theme.of(context).colorScheme.primary,
             onTap: () {
-              final sessionId = 'admin-session-${workspace.id}';
-              final name =
-                  ref.watch(getAccountProvider)?.userMetadata?['name'] ??
-                      'Anonim';
-              // print('name: $name');
-              ref
-                  .read(currentUserProvider.notifier)
-                  .setSession(name: name, id: sessionId);
-              ref
-                  .read(currentWorkspaceProvider.notifier)
-                  .setWorkspaceSession(workspaceId: workspace.id, workspaceName: workspace.name);
-              const PosRoute().go(context);
+              try {
+                final name =
+                    ref.watch(getAccountProvider)?.userMetadata?['name'] ??
+                        'Anonim';
+                // print('name: $name');
+                ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(
+                    workspaceId: workspace.id, workspaceName: workspace.name);
+
+                ref
+                    .read(waitingRoomControllerProvider.notifier)
+                    .joinAsOwner(workspace.id, name);
+
+                if (context.mounted) {
+                  const PosRoute().go(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Gagal masuk lapak: $e'),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ));
+                }
+              }
             });
       },
     );

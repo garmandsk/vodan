@@ -47,7 +47,7 @@ class TransactionController extends _$TransactionController {
               value: workspaceId
             ),
             callback: (payload) {
-              print('🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
+              // print('🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
               ref.invalidateSelf();
             }
           )
@@ -73,7 +73,7 @@ class TransactionController extends _$TransactionController {
 
     try {
       final workspaceId = ref.read(currentWorkspaceProvider)?.id ?? 'unknown_workspace';
-      final cashierName = ref.read(currentUserProvider)?.cashierName ?? 'Kasir-anonim';
+      final cashierName = ref.read(currentCashierProvider)?.cashierName ?? 'Kasir-anonim';
 
       final transactionData = TransactionRequestModel(
         workspaceId: workspaceId, 

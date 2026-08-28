@@ -48,8 +48,7 @@ class ProductController extends _$ProductController {
                   column: 'workspace_id',
                   value: workspaceId),
               callback: (payload) {
-                print(
-                    '🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
+                // print('🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
                 ref.invalidateSelf();
               })
           .subscribe((status, [error]) {

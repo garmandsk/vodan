@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vodan/core/providers/admin_session.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
 import 'package:vodan/features/workspace/data/repositories/access_repository.dart';
@@ -68,8 +67,7 @@ class AccessController extends _$AccessController {
                   column: 'workspace_id',
                   value: workspaceId),
               callback: (payload) {
-                print(
-                    '🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
+                // print('🔥 Terdeteksi perubahan dari Spreadsheet/Supabase: $payload');
                 refresh(workspaceId);
               })
           .subscribe((statuc, [error]) {
@@ -84,7 +82,7 @@ class AccessController extends _$AccessController {
   }
 
   void _pingSession() =>
-      ref.read(adminSessionProvider.notifier).refreshSession();
+      ref.read(currentCashierProvider.notifier).refreshSession();
 
   Future<void> refresh(String workspaceId) async {
     state = state.copyWith(isLoading: true);
@@ -100,7 +98,7 @@ class AccessController extends _$AccessController {
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);
-      print('Gagal memuat ulang: $e');
+      // print('Gagal memuat ulang: $e');
     }
   }
 

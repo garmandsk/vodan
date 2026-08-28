@@ -8,7 +8,7 @@ part 'account_controller.g.dart';
 
 @riverpod
 class AccountController extends _$AccountController {
-  @override  
+  @override
   FutureOr<void> build() {
     return null;
   }
@@ -16,7 +16,7 @@ class AccountController extends _$AccountController {
   Future<void> login(LoginRequestModel data) async {
     // Loading
     state = const AsyncValue.loading();
-    
+
     try {
       // Proses
       state = await AsyncValue.guard(() async {
@@ -44,15 +44,14 @@ class AccountController extends _$AccountController {
   }
 
   Future<void> logout() async {
-    // Loading
     state = const AsyncValue.loading();
 
-    // Proses
     try {
       final repo = ref.read(accountRepositoryProvider);
       await repo.logout();
-    } catch (e) {
-      // print('Gagal logout: $e');
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }
@@ -61,5 +60,5 @@ class AccountController extends _$AccountController {
 User? getAccount(Ref ref) {
   final repo = ref.watch(accountRepositoryProvider);
   // print(repo.currentUser);
-  return repo.currentUser; 
+  return repo.currentUser;
 }

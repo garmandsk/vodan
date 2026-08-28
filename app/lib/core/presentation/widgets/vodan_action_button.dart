@@ -4,6 +4,7 @@ class VodanActionButton extends StatelessWidget {
   const VodanActionButton({
     super.key,
     this.height = 50.0,
+    this.width,
     this.text,
     this.prefixIcon,
     this.suffixIcon,
@@ -17,6 +18,7 @@ class VodanActionButton extends StatelessWidget {
   });
 
   final double height;
+  final double? width;
   final String? text;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
@@ -34,7 +36,7 @@ class VodanActionButton extends StatelessWidget {
     
     return SizedBox(
       height: height,
-      width: isExpanded ? double.infinity : null,
+      width: width ?? (isExpanded ? double.infinity : null),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed, 
         style: ElevatedButton.styleFrom(

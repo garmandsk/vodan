@@ -9,6 +9,48 @@ class WaitingRoomRepository {
   WaitingRoomRepository(this._supabase);
 
   final SupabaseClient _supabase;
+
+  Future<String> joinAsOwner({
+    required String workspaceId,
+    required String deviceId,
+    required String ownerName,
+  }) async {
+    try {
+      final existingSession = await _supabase
+          .from('cashier_queue')
+          .select('id')
+          .eq('workspace_id', workspaceId)
+          .eq('device_id', deviceId)
+          .maybeSingle();
+
+      if (existingSession != null) {
+        await _supabase
+            .from('cashier_queue')
+            .update({
+              'cashier_name': ownerName,
+              'status': QueueStatus.approved.name,
+            })
+            .eq('id', existingSession['id']);
+
+        return existingSession['id'] as String;
+      }
+
+      final response = await _supabase
+          .from('cashier_queue')
+          .insert({
+            'workspace_id': workspaceId,
+            'cashier_name': ownerName,
+            'device_id': deviceId,
+            'status': QueueStatus.approved.name
+          })
+          .select('id')
+          .single();
+
+      return response['id'] as String;
+    } catch (e) {
+      throw Exception('Gagal membuat sesi owner: $e');
+    }
+  }
   
   Future<String> joinWaitingRoom({
     required String workspaceId, 
@@ -69,7 +111,7 @@ class WaitingRoomRepository {
         .eq('workspace_id', workspaceId)
         .eq('status', QueueStatus.pending.name)
         .handleError((error) {
-          print('Stream error caught: $error');
+          // print('Stream error caught: $error');
         })
         .map((otherCashiers) {
           return otherCashiers.where((cashier) => cashier['id'] != mySessionId).toList();
@@ -121,6 +163,6 @@ class WaitingRoomRepository {
 }
 
 @Riverpod(keepAlive: true)
-WaitingRoomRepository waitingRoomRepo(Ref ref) {
+WaitingRoomRepository waitingRoomRepository(Ref ref) {
   return WaitingRoomRepository(ref.watch(supabaseClientProvider));
 }

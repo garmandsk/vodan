@@ -39,7 +39,7 @@ class BroadcastService {
     required String cashierName,
     required double totalPrice,
   }) async {
-    print('broadcast penjualan');
+    // print('broadcast penjualan');
 
     final channel = _channel ?? _supabase.channel('workspace-$workspaceId');
     await channel.sendBroadcastMessage(

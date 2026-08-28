@@ -71,7 +71,7 @@ class WorkspaceWaitingRoomRoute extends GoRouteData with $WorkspaceWaitingRoomRo
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final sessionId = ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
+    final sessionId = ProviderScope.containerOf(context).read(currentCashierProvider)?.sessionId;
 
     if (sessionId == null) {
       return const EnterWorkspaceRoute().location;

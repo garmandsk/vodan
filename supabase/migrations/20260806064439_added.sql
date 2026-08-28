@@ -16,7 +16,7 @@ BEGIN
     RETURN FALSE;
   END IF;
 
-  IF stored_hash = crypt(p_pin, stored_hash) THEN
+  IF stored_hash = extensions.crypt(p_pin, stored_hash) THEN
     RETURN TRUE;
   ELSE
     RETURN FALSE;

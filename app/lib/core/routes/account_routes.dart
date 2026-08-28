@@ -38,9 +38,9 @@ class LoginRoute extends GoRouteData with $LoginRoute {
   }
 }
 
-@TypedGoRoute<ProfileRoute>(path: '/profile')
-class ProfileRoute extends GoRouteData with $ProfileRoute {
-  const ProfileRoute();
+@TypedGoRoute<AccountRoute>(path: '/account')
+class AccountRoute extends GoRouteData with $AccountRoute {
+  const AccountRoute();
 
   @override
   Widget build(BuildContext context, GoRouterState state) => ProfileScreen();

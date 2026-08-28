@@ -36,7 +36,7 @@ class TransactionRoute extends GoRouteData with $TransactionRoute {
     final workspaceId =
         ProviderScope.containerOf(context).read(currentWorkspaceProvider);
     final cashierSessionId =
-        ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
+        ProviderScope.containerOf(context).read(currentCashierProvider)?.sessionId;
 
     if (workspaceId == null || cashierSessionId == null) {
       // print('cashier: $cashierSessionId');
@@ -66,7 +66,7 @@ class CashierShellRouteData extends StatefulShellRouteData {
     final workspaceId =
         ProviderScope.containerOf(context).read(currentWorkspaceProvider)?.id;
     final cashierSessionId =
-        ProviderScope.containerOf(context).read(currentUserProvider)?.sessionId;
+        ProviderScope.containerOf(context).read(currentCashierProvider)?.sessionId;
 
     if (workspaceId == null || cashierSessionId == null) {
 
@@ -118,6 +118,16 @@ class AccessRoute extends GoRouteData with $AccessRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => AccessScreen();
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final cashier = ProviderScope.containerOf(context).read(currentCashierProvider);
+    if (cashier?.isAdmin != true) {
+      return const PosRoute().location;
+    }
+
+    return null;
+  }
 }
 
 class SettingRoute extends GoRouteData with $SettingRoute {
@@ -125,4 +135,14 @@ class SettingRoute extends GoRouteData with $SettingRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) => SettingScreen();
+
+  @override
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final cashier = ProviderScope.containerOf(context).read(currentCashierProvider);
+    if (cashier?.isAdmin != true) {
+      return const PosRoute().location;
+    }
+
+    return null;
+  }
 }

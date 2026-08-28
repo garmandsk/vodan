@@ -134,7 +134,7 @@ CREATE TABLE public.transaction_log (
   created_at       timestamp with time zone       DEFAULT now() NOT NULL
 );
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.cashier_queue, TABLE public.transaction_log;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.products, TABLE public.cashier_queue, TABLE public.transaction_log;
 
 ALTER TABLE public.transaction_log
   ENABLE ROW LEVEL SECURITY;

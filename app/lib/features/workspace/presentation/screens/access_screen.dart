@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vodan/core/presentation/widgets/pin_barrier.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_text_form_field.dart';
-import 'package:vodan/core/providers/admin_session.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/utils/responsive_utils.dart';
 import 'package:vodan/features/workspace/data/repositories/access_repository.dart';
@@ -21,6 +20,8 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   final TextEditingController _pinController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _pinController.dispose();
@@ -29,23 +30,22 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   }
 
   Future<void> _submitPin() async {
-    final workspaceId = ref.read(currentWorkspaceProvider)?.id;
-    if (workspaceId == null) return;
+    setState(() => _isLoading = true);
 
-    final pin = _pinController.text;
-    if (pin.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN tidak boleh kosong!')));
+    final workspaceId = ref.read(currentWorkspaceProvider)?.id;
+    if (workspaceId == null) {
+      setState(() => _isLoading = false);
       return;
     }
 
-    final errorMessage = await ref.read(adminSessionProvider.notifier).verifyPin(workspaceId, pin);
-    
-    _pinController.clear();
+    final errorMessage = await ref.read(currentCashierProvider.notifier).verifyPin(workspaceId, _pinController.text);
 
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    _pinController.clear();
+    
     if (errorMessage != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage), backgroundColor: Theme.of(context).colorScheme.error),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage), backgroundColor: Colors.red));
     }
   }
 
@@ -98,20 +98,35 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<CashierSessionModel?>(currentCashierProvider, ((previous, next) {
+      if (previous?.isPinVerified == true && next?.isPinVerified == false) {
+        while (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⏳ Sesi habis karena tidak ada aktivitas. Layar dikunci otomatis.'),
+            backgroundColor: Colors.orange,
+          )
+        );
+      }
+    }));
+    
     final theme = Theme.of(context);
     final isDesktop = context.isDesktop;
-    final barrierState = ref.watch(adminSessionProvider);
+    final currentUserState = ref.watch(currentCashierProvider);
     final state = ref.watch(accessControllerProvider);
     final workspaceId = ref.read(currentWorkspaceProvider)!.id;
 
     // Layar Terkunci
-    if (!barrierState.isPinVerified) {
+    if (!currentUserState!.isPinVerified) {
       return PinBarrier(
         tffController: _pinController,
-        tffEnabled: !barrierState.isLoading,
+        tffEnabled: _isLoading,
         tffOnFieldSubmitted: (_) => _submitPin(),
-        buttonText: barrierState.isLoading ? 'Memeriksa...' : 'Buka Kunci', 
-        buttonOnPressed: barrierState.isLoading ? null : _submitPin,
+        buttonText: _isLoading ? 'Memeriksa...' : 'Buka Kunci', 
+        buttonOnPressed: _isLoading ? null : _submitPin,
       );
     }
 
@@ -173,7 +188,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
                 onPressed: () => ref.read(accessControllerProvider.notifier).refresh(workspaceId)
               ),
               FloatingActionButton.small(
-                onPressed: () => ref.read(adminSessionProvider.notifier).lockScreen(),
+                onPressed: () => ref.read(currentCashierProvider.notifier).activateLock(),
                 backgroundColor: theme.colorScheme.errorContainer,
                 child: Icon(Icons.lock_outline_rounded, color: theme.colorScheme.onErrorContainer),
               ),

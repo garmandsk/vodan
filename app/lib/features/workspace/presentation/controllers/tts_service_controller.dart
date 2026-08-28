@@ -97,8 +97,8 @@ class TtsServiceController extends _$TtsServiceController {
     await _flutterTts.awaitSpeakCompletion(true);
     await _flutterTts.setVolume(1.0);
 
-    final languages = await _flutterTts.getLanguages;
-    print('🗣️ Bahasa yang tersedia di Perangkat ini: $languages');
+    // final languages = await _flutterTts.getLanguages;
+    // print('🗣️ Bahasa yang tersedia di Perangkat ini: $languages');
 
     _flutterTts.setStartHandler(() {
       state = state.copyWith(isSpeaking: true);
@@ -109,7 +109,7 @@ class TtsServiceController extends _$TtsServiceController {
     });
 
     _flutterTts.setErrorHandler((msg) {
-      print("TTS Error: $msg");
+      // print("TTS Error: $msg");
       state = state.copyWith(isSpeaking: false);
     });
   }
@@ -132,7 +132,7 @@ class TtsServiceController extends _$TtsServiceController {
     double? rate,
     String? languageCode
   }) async {
-    print("Berbicara: $text");
+    // print("Berbicara: $text");
     try {
       await stop();
 
@@ -141,7 +141,7 @@ class TtsServiceController extends _$TtsServiceController {
       // if (rate != null) _aiRate = rate;
       // if (languageCode != null) _aiLanguageCode = languageCode;
 
-      print('text: ${state.text}');
+      // print('text: ${state.text}');
 
       bool isAvailable = await _flutterTts.isLanguageAvailable(state.languageCode);
       String finalLangCode = state.languageCode;
@@ -161,14 +161,14 @@ class TtsServiceController extends _$TtsServiceController {
       if (isAvailable) {
         await _flutterTts.setLanguage(finalLangCode);
       } else {
-        print("Tidak ada bahasa yang didukung di Perangkat ini.");
+        // print("Tidak ada bahasa yang didukung di Perangkat ini.");
       }
 
       await _flutterTts.setPitch(state.pitch);
       await _flutterTts.setSpeechRate(state.rate);
       await _flutterTts.speak(state.text, focus: true);
     } catch (e) {
-      print('Gagal memutar suara: $e');
+      // print('Gagal memutar suara: $e');
     }
   }
 
@@ -177,7 +177,7 @@ class TtsServiceController extends _$TtsServiceController {
     if (state.text.isNotEmpty) {
       await speak();
     } else {
-      print('Belum ada suara yang bisa diulang.');
+      // print('Belum ada suara yang bisa diulang.');
     }
   }
 

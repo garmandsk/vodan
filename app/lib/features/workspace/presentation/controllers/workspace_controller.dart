@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
+import 'package:vodan/features/workspace/data/models/payment_config_model.dart';
 import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
 import '../../data/repositories/workspace_repository.dart';
 
@@ -8,7 +9,7 @@ part 'workspace_controller.g.dart';
 
 @Riverpod(keepAlive: true)
 class WorkspaceController extends _$WorkspaceController {
-  @override  
+  @override
   FutureOr<List<WorkspaceResponseModel>> build() async {
     final repo = ref.read(workspaceRepositoryProvider);
     return await repo.getWorkspaceList();
@@ -19,7 +20,8 @@ class WorkspaceController extends _$WorkspaceController {
       final repo = ref.read(workspaceRepositoryProvider);
       final workspace = await repo.getWorkspaceById(id);
 
-      ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: workspace.id, workspaceName: workspace.name);
+      ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(
+          workspaceId: workspace.id, workspaceName: workspace.name);
       return null;
     } catch (e) {
       return 'Gagal mengambil data lapak';
@@ -53,7 +55,8 @@ class WorkspaceController extends _$WorkspaceController {
       final repo = ref.read(workspaceRepositoryProvider);
       await repo.editWorkspaceName(workspaceId, newName);
 
-      ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(workspaceId: workspaceId, workspaceName: newName);
+      ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(
+          workspaceId: workspaceId, workspaceName: newName);
       return null;
     } catch (e) {
       return 'Gagal edit nama lapak';
@@ -61,7 +64,8 @@ class WorkspaceController extends _$WorkspaceController {
     }
   }
 
-  Future<String?> editWorkspaceAiKeys(String workspaceId, List<AiKeys> newAiKeys) async {
+  Future<String?> editWorkspaceAiKeys(
+      String workspaceId, List<AiKeys> newAiKeys) async {
     try {
       final repo = ref.read(workspaceRepositoryProvider);
       await repo.editWorkspaceAiKeys(workspaceId, newAiKeys);
@@ -72,13 +76,16 @@ class WorkspaceController extends _$WorkspaceController {
     }
   }
 
-  Future<String?> toggleSaleBroadcast(String workspaceId, bool currentValue) async {
+  Future<String?> toggleSaleBroadcast(
+      String workspaceId, bool currentValue) async {
     try {
       final repo = ref.read(workspaceRepositoryProvider);
       final newValue = !currentValue;
       await repo.editIsSaleBroadcastOn(workspaceId, newValue);
 
-      ref.read(currentWorkspaceProvider.notifier).updateSaleBroadcastStatus(newValue);
+      ref
+          .read(currentWorkspaceProvider.notifier)
+          .updateSaleBroadcastStatus(newValue);
 
       return null;
     } catch (e) {
@@ -103,4 +110,9 @@ class WorkspaceController extends _$WorkspaceController {
       // return e.toString().replaceAll('Exception: ', '');
     }
   }
+}
+
+@riverpod
+Future<PaymentConfigModel> workspacePaymentConfig(Ref ref, String workspaceId) {
+  return ref.read(workspaceRepositoryProvider).getPaymentConfig(workspaceId);
 }

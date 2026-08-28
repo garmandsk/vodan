@@ -19,6 +19,8 @@ class CashierSessionModel {
     required this.sessionId,
     this.status,
     this.createdAt,
+    this.isAdmin = false,
+    this.isPinVerified = false
   });
 
   final String? workspaceId;
@@ -27,16 +29,16 @@ class CashierSessionModel {
   final String sessionId;
   final QueueStatus? status;
   final DateTime? createdAt;
+  final bool isAdmin;
+  final bool isPinVerified;
 
   factory CashierSessionModel.fromJson(Map<String, dynamic> json) {
     return CashierSessionModel(
-      sessionId: json['id'] as String, 
       workspaceId: json['workspace_id'] as String?,
       cashierName: json['cashier_name'] as String,
       deviceId: json['device_id'] as String?,
+      sessionId: json['id'] as String, 
       status: json['status'] != null ? QueueStatus.fromString(json['status'] as String) : null,
-      
-      // Mengubah string timestamp UTC dari database menjadi zona waktu lokal HP (WIB/WITA/WIT)
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String).toLocal() : null,
     );
   }
@@ -57,6 +59,8 @@ class CashierSessionModel {
     String? sessionId,
     QueueStatus? status,
     DateTime? createdAt,
+    bool? isAdmin,
+    bool? isPinVerified
   }) {
     return CashierSessionModel(
       workspaceId: workspaceId ?? this.workspaceId,
@@ -65,6 +69,8 @@ class CashierSessionModel {
       sessionId: sessionId ?? this.sessionId,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      isAdmin: isAdmin ?? this.isAdmin,
+      isPinVerified: isPinVerified ?? this.isPinVerified
     );
   }
 }

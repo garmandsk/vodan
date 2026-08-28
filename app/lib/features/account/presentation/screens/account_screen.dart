@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vodan/core/presentation/widgets/vodan_badge.dart';
 import 'package:vodan/features/account/data/repositories/account_repository.dart';
 import 'package:vodan/core/presentation/widgets/account_bottom_sheet.dart';
 
@@ -13,27 +14,16 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lapakku', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: false,
+        title: Text('Akun'),
+        automaticallyImplyLeading: false,
         actions: [
-          // 🌟 AVATAR PROFIL DI POJOK KANAN ATAS
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              // Panggil Bottom Sheet saat ditekan
-              onTap: () => AccountBottomSheet.show(context), 
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                child: Text(
-                  name[0].toUpperCase(), 
-                  style: const TextStyle(fontWeight: FontWeight.bold)
-                ),
-              ),
+          if (name != 'Anonim')
+            VodanBadge(
+              text: name,
+              radius: 18,
+              onTap: () => AccountBottomSheet.show(context),
             ),
-          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: Padding(

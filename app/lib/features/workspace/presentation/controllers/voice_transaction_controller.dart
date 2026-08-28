@@ -9,7 +9,14 @@ import 'tts_service_controller.dart';
 
 part 'voice_transaction_controller.g.dart';
 
-enum VoiceState { idle, listening, processing, successChat, successTransaction, error }
+enum VoiceState {
+  idle,
+  listening,
+  processing,
+  successChat,
+  successTransaction,
+  error
+}
 
 @Riverpod(keepAlive: true)
 class VoiceTransactionController extends _$VoiceTransactionController {
@@ -21,7 +28,7 @@ class VoiceTransactionController extends _$VoiceTransactionController {
   }
 
   Future<void> startRecording() async {
-    print('Mulai ngomong');
+    // print('Mulai ngomong');
     if (state == VoiceState.listening) return;
 
     state = VoiceState.listening;
@@ -29,7 +36,7 @@ class VoiceTransactionController extends _$VoiceTransactionController {
   }
 
   Future<void> stopAndProcess(String workspaceId) async {
-    print('Tombol dilepas, bersiap memproses...');
+    // print('Tombol dilepas, bersiap memproses...');
 
     await Future.delayed(const Duration(milliseconds: 600));
 
@@ -37,22 +44,22 @@ class VoiceTransactionController extends _$VoiceTransactionController {
 
     final speechState = ref.read(sttServiceControllerProvider);
     final text = speechState.recognizedText;
-    
-    print('stop dan proses suara: $text');
+
+    // print('stop dan proses suara: $text');
 
     processAiOrders(workspaceId, text);
   }
 
   void resetToIdle() {
     if (state != VoiceState.idle) {
-      print('kembali siaga');
+      // print('kembali siaga');
 
       state = VoiceState.idle;
     }
   }
 
   Future<void> processManualText(String text, String workspaceId) async {
-    print('proses manual');
+    // print('proses manual');
     processAiOrders(workspaceId, text);
   }
 
@@ -69,16 +76,19 @@ class VoiceTransactionController extends _$VoiceTransactionController {
 
     try {
       final aiService = ref.read(voiceTransactionRepositoryProvider);
-      final availableLanguages = await ref.read(ttsServiceControllerProvider.notifier).getAvailableLanguages();
+      final availableLanguages = await ref
+          .read(ttsServiceControllerProvider.notifier)
+          .getAvailableLanguages();
 
-      final VoiceTransactionResponseModel aiResult = await aiService.createVoiceTransaction(workspaceId, text, availableLanguages);
+      final VoiceTransactionResponseModel aiResult = await aiService
+          .createVoiceTransaction(workspaceId, text, availableLanguages);
       isLastStockAdjusted = aiResult.isStockAdjusted;
 
       fallbackText = aiResult.fallbackResponse;
       fallbackLangCode = aiResult.ttsConfig.languageCode;
 
-      // print('aiResult response: ${aiResult.voiceResponse}');
-      // print('aiResult: ${aiResult.ttsConfig}');
+      print('aiResult response: ${aiResult.voiceResponse}');
+      print('aiResult: ${aiResult.ttsConfig}');
 
       final Intent intent = aiResult.intent;
 
@@ -86,26 +96,26 @@ class VoiceTransactionController extends _$VoiceTransactionController {
         final catalog = ref.read(productControllerProvider).value ?? [];
         final orders = aiResult.orders;
 
-        // print('🛒 [KERANJANG] Menambahkan: $orders');
+        print('🛒 [KERANJANG] Menambahkan: $orders');
         ref.read(cartControllerProvider.notifier).addAiOrders(orders, catalog);
       }
 
       final ttsConfig = aiResult.ttsConfig;
       ref.read(ttsServiceControllerProvider.notifier).setDefaultAiTts(
-        text: aiResult.voiceResponse,
-        pitch: ttsConfig.pitch,
-        rate: ttsConfig.rate,
-        languageCode: ttsConfig.languageCode,
-      );
+            text: aiResult.voiceResponse,
+            pitch: ttsConfig.pitch,
+            rate: ttsConfig.rate,
+            languageCode: ttsConfig.languageCode,
+          );
       await ref.read(ttsServiceControllerProvider.notifier).speak(
-        text: aiResult.voiceResponse,
-        pitch: ttsConfig.pitch,
-        rate: ttsConfig.rate,
-        languageCode: ttsConfig.languageCode,
-      );
+            text: aiResult.voiceResponse,
+            pitch: ttsConfig.pitch,
+            rate: ttsConfig.rate,
+            languageCode: ttsConfig.languageCode,
+          );
 
       // for (var order in aiResult.orders) {
-        // print('Menambahkan ${order.name} sebanyak ${order.qty} dengan total ${order.subTotal}');
+      // print('Menambahkan ${order.name} sebanyak ${order.qty} dengan total ${order.subTotal}');
       // }
 
       state = intent == Intent.transaction
@@ -115,11 +125,15 @@ class VoiceTransactionController extends _$VoiceTransactionController {
       print('❌ AI Error: $e');
       state = VoiceState.error;
 
+      fallbackText = e.toString().replaceFirst('Exception: ', '');
+
       ref.read(ttsServiceControllerProvider.notifier).setText(fallbackText);
-      ref.read(ttsServiceControllerProvider.notifier).setLanguageCode(fallbackLangCode);
-      await ref
+      ref
           .read(ttsServiceControllerProvider.notifier)
-          .speak();
+          .setLanguageCode(fallbackLangCode);
+      ref.read(ttsServiceControllerProvider.notifier).setRate(0.7);
+      ref.read(ttsServiceControllerProvider.notifier).setPitch(0.7);
+      await ref.read(ttsServiceControllerProvider.notifier).speak();
     }
   }
 }

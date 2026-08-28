@@ -67,20 +67,20 @@ class SttServiceController extends _$SttServiceController {
           }
         },
         onError: (errorNotification) {
-          print('STT Error: $errorNotification');
+          // print('STT Error: $errorNotification');
           state = state.copyWith(isListening: false);
         },
       );
       state = state.copyWith(isAvailable: available);
     } catch (e) {
-      print('Gagal inisialisasi STT: $e');
+      // print('Gagal inisialisasi STT: $e');
       state = state.copyWith(isAvailable: false);
     }
   }
 
   Future<void> startListening() async {
     if (state.isListening) {
-      print('ℹ️ Mikrofon sudah berjalan, abaikan spam klik.');
+      // print('ℹ️ Mikrofon sudah berjalan, abaikan spam klik.');
       return;
     }
 
@@ -91,7 +91,7 @@ class SttServiceController extends _$SttServiceController {
       
       await _speech.listen(
         onResult: (result) {
-          print('suara terdengar: ${result.recognizedWords}');
+          // print('suara terdengar: ${result.recognizedWords}');
           state = state.copyWith(recognizedText: result.recognizedWords);
         },
         listenOptions: stt.SpeechListenOptions(

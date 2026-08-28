@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_bottom_sheet.dart';
+import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/features/account/data/repositories/account_repository.dart';
-import 'package:vodan/features/account/presentation/controllers/account_controller.dart'; 
+import 'package:vodan/features/account/presentation/controllers/account_controller.dart';
 
 class AccountBottomSheet extends ConsumerWidget {
   const AccountBottomSheet({super.key});
@@ -23,6 +25,7 @@ class AccountBottomSheet extends ConsumerWidget {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      spacing: 16,
       children: [
         CircleAvatar(
           radius: 40,
@@ -33,34 +36,42 @@ class AccountBottomSheet extends ConsumerWidget {
             style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
           ),
         ),
-        const SizedBox(height: 16),
-
-        Text(name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Text(email, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: 32),
-
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.manage_accounts_outlined),
-          label: const Text('Pengaturan Akun'),
+        Column(
+          children: [
+            Text(name,
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(email,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ],
         ),
-        const SizedBox(height: 12),
-
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
-            backgroundColor: theme.colorScheme.errorContainer,
-            foregroundColor: theme.colorScheme.onErrorContainer,
-          ),
+        VodanActionButton(
+          text: 'Daftar Lapakku',
+          prefixIcon: Icons.storefront_rounded,
+          width: double.infinity,
+          onPressed: () => WorkspaceListRoute().go(context),
+        ),
+        VodanActionButton(
+          backgroundColor: theme.colorScheme.secondary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          text: 'Pengaturan Akun',
+          prefixIcon: Icons.manage_accounts_outlined,
+          width: double.infinity,
+          onPressed: () => AccountRoute().go(context),
+        ),
+        VodanActionButton(
+          backgroundColor: theme.colorScheme.errorContainer,
+          foregroundColor: theme.colorScheme.onErrorContainer,
+          text: 'Keluar (Logout)',
+          prefixIcon: Icons.logout_rounded,
+          width: double.infinity,
           onPressed: () async {
-            if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            ref.read(accountControllerProvider.notifier).logout();
+            await ref.read(accountControllerProvider.notifier).logout();
+            if (context.mounted) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
           },
-          icon: const Icon(Icons.logout_rounded),
-          label: const Text('Keluar (Logout)'),
         ),
       ],
     );
