@@ -1,13 +1,9 @@
-name: Deploy VoDan to Play Store & Github Release
+name: Build VoDan APK Release
 
 on:
   push:
-    branches:
-      - main
     tags:
-      - 'v*'
-    paths:
-      - 'app/**'
+      - "v*"
 
 jobs:
   build_and_deploy:
@@ -15,37 +11,45 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
-        
+          flutter-version: "3.x"
+
+      - name: Create Flutter environment file
+        working-directory: app
+        run: |
+          printf 'SUPABASE_URL=%s\nSUPABASE_PUBLISHABLE_KEY=%s\n' \
+            "${{ secrets.SUPABASE_URL }}" \
+            "${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" > .env
+
       - name: Install Dependencies
+        working-directory: app
         run: flutter pub get
 
-      - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
-      
-      - name: Build App Bundle (AAB)
-        run: flutter build appbundle --release
+      - name: Generate Dart Code
+        working-directory: app
+        run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Upload to Google Play
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.origin.vodan
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          track: internal
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/android/app/upload-keystore.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n' "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEY_ALIAS" > app/android/key.properties
 
       - name: Build APK
+        working-directory: app
         run: flutter build apk --release
 
-      - name: Create Github Release & Upload APK
+      - name: Create GitHub Release & Upload APK
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: app/build/app/outputs/flutter-apk/app-release.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      

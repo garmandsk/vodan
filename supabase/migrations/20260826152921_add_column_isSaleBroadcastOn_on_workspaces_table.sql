@@ -1,0 +1,1 @@
+ALTER TABLE public.workspaces ADD COLUMN is_sale_broadcast_on BOOLEAN NOT NULL DEFAULT true;

@@ -1,0 +1,90 @@
+import 'package:flutter/material.dart';
+
+class VodanActionCard extends StatelessWidget {
+  const VodanActionCard({
+    super.key,
+    required this.title,
+    this.subtitle,
+    required this.prefixIcon,
+    this.suffixIcon,
+    required this.color,
+    this.padding,
+    this.iconSize = 32.0,
+    this.titleSize,
+    required this.onTap,
+  }); 
+  
+  final String title;
+  final String? subtitle;
+  final IconData prefixIcon;
+  final Widget? suffixIcon;
+  final Color color;
+  final double? padding;
+  final double? iconSize;
+  final double? titleSize;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shadowColor: color.withValues(alpha: 0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: color.withValues(alpha: 0.1), width: 1),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16), // Efek riak/sentuhan melengkung
+        child: Padding(
+          padding: EdgeInsets.all(padding ?? 20.0),
+          child: Row(
+            children: [
+              // Ikon Peran
+              Container(
+                padding: EdgeInsets.all(iconSize! * 0.375),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(prefixIcon, color: color, size: iconSize ?? 32),
+              ),
+              const SizedBox(width: 16),
+              
+              // Teks Penjelasan
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: titleSize ?? 18,
+                          ),
+                    ),
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                              height: 1.3,
+                              fontSize: 14
+                            ),
+                      ),
+                    ]
+                  ],
+                ),
+              ),
+              
+              // Panah Kanan
+              suffixIcon ?? Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
