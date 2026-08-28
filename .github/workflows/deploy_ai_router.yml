@@ -25,4 +25,4 @@ jobs:
           version: latest
       
       - name: Deploy
-        run: supabase functions deploy vodan_ai_router --project-ref $PROJECT_ID --no-verify-jwt
+        run: supabase functions deploy voice_transaction --project-ref $PROJECT_ID --no-verify-jwt
