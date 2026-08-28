@@ -162,36 +162,6 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
   Widget build(BuildContext context) {
     final isDesktop = context.isDesktop || context.isTablet;
     final theme = Theme.of(context);
-
-    final destinations = [
-      const _NavigationDestination(
-          icon: Icons.point_of_sale_outlined,
-          selectedIcon: Icons.point_of_sale_rounded,
-          label: 'Kasir'),
-      const _NavigationDestination(
-          icon: Icons.receipt_long_outlined,
-          selectedIcon: Icons.receipt_long_rounded,
-          label: 'Riwayat'),
-      const _NavigationDestination(
-          icon: Icons.people_alt_outlined,
-          selectedIcon: Icons.people_alt_rounded,
-          label: 'Akses'),
-      const _NavigationDestination(
-          icon: Icons.settings_outlined,
-          selectedIcon: Icons.settings_rounded,
-          label: 'Pengaturan'),
-    ];
-
-    String currentTitle = 'Kasir';
-    switch (widget.navigationShell.currentIndex) {
-      case 1:
-        currentTitle = 'Riwayat Transaksi';
-      case 2:
-        currentTitle = 'Daftar Akses';
-      case 3:
-        currentTitle = 'Pengaturan Lapak';
-    }
-
     final user = ref.watch(accountRepositoryProvider).currentUser;
     final cashier = ref.watch(currentCashierProvider);
     final name =
@@ -204,6 +174,37 @@ class _VodanMainScaffoldState extends ConsumerState<VodanMainScaffold> {
         voiceState == VoiceState.successTransaction ||
         voiceState == VoiceState.successChat ||
         voiceState == VoiceState.error;
+
+    final destinations = [
+      const _NavigationDestination(
+          icon: Icons.point_of_sale_outlined,
+          selectedIcon: Icons.point_of_sale_rounded,
+          label: 'Kasir'),
+      const _NavigationDestination(
+          icon: Icons.receipt_long_outlined,
+          selectedIcon: Icons.receipt_long_rounded,
+          label: 'Riwayat'),
+      if (cashier?.isAdmin == true)
+        const _NavigationDestination(
+            icon: Icons.people_alt_outlined,
+            selectedIcon: Icons.people_alt_rounded,
+            label: 'Akses'),
+      if (cashier?.isAdmin == true)
+        const _NavigationDestination(
+            icon: Icons.settings_outlined,
+            selectedIcon: Icons.settings_rounded,
+            label: 'Pengaturan'),
+    ];
+
+    String currentTitle = 'Kasir';
+    switch (widget.navigationShell.currentIndex) {
+      case 1:
+        currentTitle = 'Riwayat Transaksi';
+      case 2:
+        currentTitle = 'Daftar Akses';
+      case 3:
+        currentTitle = 'Pengaturan Lapak';
+    }
 
     final body = isDesktop
         ? Row(
