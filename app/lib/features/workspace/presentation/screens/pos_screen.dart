@@ -25,6 +25,11 @@ class PosScreen extends ConsumerStatefulWidget {
 class _PosScreenState extends ConsumerState<PosScreen> {
   final TextEditingController _searchController = TextEditingController();
 
+  String _productImageUrl(ProductModel product, int index) {
+    final seed = '${product.id}-$index';
+    return 'https://picsum.photos/seed/${seed.hashCode}/800/600';
+  }
+
   void _initializeBroadcast() {
     final workspaceId = ref.read(currentWorkspaceProvider)?.id;
     if (workspaceId == null) return;
@@ -149,7 +154,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                               .firstOrNull;
                           final qty = cartItem?.quantity ?? 0;
 
-                          return _buildProductCard(theme, product, qty);
+                          return _buildProductCard(theme, product, qty, index);
                         },
                       ),
                     ),
@@ -221,7 +226,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   // ---------------------------------------------------------
   // KARTU PRODUK DENGAN TOMBOL DINAMIS
   // ---------------------------------------------------------
-  Widget _buildProductCard(ThemeData theme, ProductModel product, int qty) {
+  Widget _buildProductCard(ThemeData theme, ProductModel product, int qty, int index) {
     if (!product.isActive) return const SizedBox.shrink();
 
     return Container(
@@ -248,7 +253,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     const BorderRadius.vertical(top: Radius.circular(20)),
                 image: DecorationImage(
                   image:
-                      const NetworkImage('https://picsum.photos/200'),
+                      NetworkImage(_productImageUrl(product, index)),
                   fit: BoxFit.cover,
                 ),
               ),

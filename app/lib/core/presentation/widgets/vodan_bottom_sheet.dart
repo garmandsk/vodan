@@ -58,7 +58,10 @@ class VodanBottomSheet extends StatelessWidget {
           const SizedBox(height: 24),
           Flexible(
             fit: FlexFit.loose,
-            child: child,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.zero,
+              child: child,
+            ),
           ),
         ],
       ),

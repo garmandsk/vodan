@@ -1,3 +1,6 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +21,9 @@ import 'package:vodan/core/providers/session.dart';
 import 'package:vodan/core/routes/app_router.dart';
 import 'package:vodan/core/utils/ai_form_row.dart';
 import 'package:vodan/core/utils/responsive_utils.dart';
-import 'package:vodan/features/workspace/presentation/controllers/workspace_controller.dart';
 import 'package:vodan/features/workspace/data/models/payment_config_model.dart';
+import 'package:vodan/features/workspace/data/models/ticket_model.dart';
+import 'package:vodan/features/workspace/presentation/controllers/workspace_controller.dart';
 import 'package:vodan/features/workspace/data/repositories/workspace_repository.dart';
 import 'package:vodan/features/workspace_auth/data/models/cashier_session_model.dart';
 import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
@@ -77,31 +81,45 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   }
 
   Future<void> _shareWorkspace(BuildContext context, String workspaceId) async {
-    final String joinLink = 'https://vodan.app/join?id=$workspaceId';
+    final joinLink = Uri.parse('https://vodan.vercel.app')
+        .resolve(
+          WorkspaceWaitingRoomRoute(
+            workspaceId: workspaceId,
+            cashierName: 'Kasir-Join',
+          ).location,
+        )
+        .toString();
 
-    final String message = '''
-      Halo! 👋 Mari bergabung ke lapak saya di VoDan.
+    final String message =
+        'Halo! 👋 Mari bergabung ke lapak saya di VoDan.\n\nKlik tautan berikut untuk masuk otomatis:\n$joinLink\n\nAtau masukkan ID Lapak manual:\n$workspaceId';
 
-      Klik tautan berikut untuk masuk otomatis:
-      $joinLink
+    final isMobileShareAllowed = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
 
-      Atau masukkan ID Lapak manual:
-      *$workspaceId*
-    ''';
+    if (isMobileShareAllowed) {
+      final result = await SharePlus.instance.share(
+        ShareParams(text: message, subject: 'Undangan Akses Lapak Vodan'),
+      );
 
-    final box = context.findRenderObject() as RenderBox?;
-    Rect? sharePosition;
-    if (box != null) {
-      sharePosition = box.localToGlobal(Offset.zero) & box.size;
+      if (result.status == ShareResultStatus.success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tautan lapak berhasil dibagikan! 🚀'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
     }
 
-    final result = await SharePlus.instance.share(
-        ShareParams(text: message, subject: 'Undangan Akses Lapak Vodan'));
+    await Clipboard.setData(ClipboardData(text: message));
 
-    if (result.status == ShareResultStatus.success && context.mounted) {
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Tautan lapak berhasil dibagikan! 🚀'),
+          content: Text('Tautan lapak berhasil disalin ke clipboard. 📋'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
@@ -111,8 +129,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
 
   // Bottomsheet Tampilkan info lapak
   void _showInfoBottomSheet(String workspaceId) {
-    final String joinLink = 'https://vodan.app/join?id=$workspaceId';
-
     final initialName =
         ref.read(currentWorkspaceProvider)?.name ?? 'Lapak Anonim';
     final nameController = TextEditingController(text: initialName);
@@ -193,32 +209,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                 onTap: () => _copy(context, workspaceId),
               ),
               const SizedBox(height: 24),
-
-              // --- QR Code Lapak ---
-              const Text(
-                'QR Code Akses Lapak',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: SizedBox(
-                  width: 160,
-                  height: 160,
-                  child: QrImageView(
-                    data: joinLink,
-                    version: QrVersions.auto,
-                    size: 160,
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16), // Jangka aman bawah untuk SafeArea
             ],
           );
         },
@@ -340,6 +330,464 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                 SizedBox(height: isDesktop ? 0 : 30),
               ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showTicketBottomSheet(String workspaceId) {
+    String? passCode;
+    bool isLoading = false;
+    bool isEditMode = false;
+    Duration selectedDuration = const Duration(hours: 24);
+
+    VodanBottomSheet.show(
+      context: context,
+      child: StatefulBuilder(
+        builder: (context, setStateModal) {
+          final durationOptions = <Map<String, dynamic>>[
+            {'label': '30 Menit', 'duration': const Duration(minutes: 30)},
+            {'label': '1 Jam', 'duration': const Duration(hours: 1)},
+            {'label': '6 Jam', 'duration': const Duration(hours: 6)},
+            {'label': '24 Jam', 'duration': const Duration(hours: 24)},
+            {'label': '7 Hari', 'duration': const Duration(days: 7)},
+          ];
+
+          String getDurationOptionLabel(Duration duration) {
+            final match = durationOptions.firstWhere(
+              (option) => (option['duration'] as Duration) == duration,
+              orElse: () => durationOptions.first,
+            );
+            return match['label'] as String;
+          }
+
+          String formatDuration(Duration duration) {
+            if (duration.inDays > 0) return '${duration.inDays} hari';
+            if (duration.inHours > 0) return '${duration.inHours} jam';
+            if (duration.inMinutes > 0) return '${duration.inMinutes} menit';
+            return 'sesaat';
+          }
+
+          Future<void> generateTicket() async {
+            setStateModal(() => isLoading = true);
+            try {
+              final createdCode = await ref
+                  .read(workspaceControllerProvider.notifier)
+                  .generateShiftPass(workspaceId, ttl: selectedDuration);
+
+              if (!context.mounted) return;
+
+              if (createdCode == null || createdCode.startsWith('Gagal')) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(createdCode ?? 'Gagal membuat tiket.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              setStateModal(() {
+                passCode = createdCode;
+                isEditMode = false;
+              });
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Gagal membuat tiket: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            } finally {
+              if (context.mounted) {
+                setStateModal(() => isLoading = false);
+              }
+            }
+          }
+
+          Future<void> copyCode() async {
+            if (passCode == null || passCode!.isEmpty) return;
+
+            await Clipboard.setData(ClipboardData(text: passCode!));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Kode tiket berhasil disalin!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          }
+
+          Future<void> shareTicket() async {
+            if (passCode == null || passCode!.isEmpty) return;
+
+            final shareText =
+                'Tiket Lapak\nKode akses: $passCode\nBerlaku ${formatDuration(selectedDuration)}\n\nBuka aplikasi VoDan lalu pilih tombol "Gunakan Tiket (QR) Lapak" untuk memindai kode ini.';
+
+            final isMobileShareAllowed = !kIsWeb &&
+                (defaultTargetPlatform == TargetPlatform.android ||
+                    defaultTargetPlatform == TargetPlatform.iOS);
+
+            if (isMobileShareAllowed) {
+              final qrPainter = QrPainter(
+                data: passCode!,
+                version: QrVersions.auto,
+                gapless: false,
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Colors.black,
+                ),
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Colors.black,
+                ),
+              );
+
+              final recorder = ui.PictureRecorder();
+              final canvas = Canvas(
+                recorder,
+                Rect.fromLTWH(0, 0, 1024, 1024),
+              );
+
+              canvas.drawRect(
+                const Rect.fromLTWH(0, 0, 1024, 1024),
+                Paint()..color = Colors.white,
+              );
+              qrPainter.paint(canvas, const Size(1024, 1024));
+
+              final picture = recorder.endRecording();
+              final qrImage = await picture.toImage(1024, 1024);
+              final qrBytes = await qrImage.toByteData(
+                format: ui.ImageByteFormat.png,
+              );
+
+              if (qrBytes == null) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Gagal membuat gambar QR untuk dibagikan.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return;
+              }
+
+              final qrFile = XFile.fromData(
+                qrBytes.buffer.asUint8List(),
+                name: 'tiket_emas_$passCode.png',
+                mimeType: 'image/png',
+              );
+
+              final result = await SharePlus.instance.share(
+                ShareParams(
+                  text: shareText,
+                  subject: 'Tiket Lapak',
+                  files: [qrFile],
+                ),
+              );
+
+              if (result.status == ShareResultStatus.success &&
+                  context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tiket berhasil dibagikan!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                return;
+              }
+            }
+
+            await Clipboard.setData(ClipboardData(text: shareText));
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Info tiket berhasil disalin ke clipboard. 📋'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          }
+
+          return FutureBuilder<TicketModel?>(
+            future: ref
+                .read(workspaceControllerProvider.notifier)
+                .getShiftPass(workspaceId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text('Gagal memuat tiket aktif: ${snapshot.error}'),
+                );
+              }
+
+              final ticket = snapshot.data;
+              if (ticket != null && passCode == null) {
+                passCode = ticket.passCode;
+                final remaining = ticket.expiresAt.difference(DateTime.now());
+                if (!remaining.isNegative) {
+                  selectedDuration = remaining;
+                }
+              }
+
+              final DateTime? effectiveExpiry = ticket?.expiresAt;
+
+              final bool isTicketCurrentlyValid = passCode != null &&
+                  (ticket == null ||
+                      !ticket.expiresAt.isBefore(DateTime.now()));
+
+              String buildRemainingText() {
+                if (effectiveExpiry == null) {
+                  return 'Berlaku ${formatDuration(selectedDuration)}';
+                }
+
+                final remaining = effectiveExpiry.difference(DateTime.now());
+                if (remaining.isNegative) {
+                  return 'Sudah kadaluarsa';
+                }
+
+                if (remaining.inDays > 0) {
+                  return '${remaining.inDays} hari ${remaining.inHours % 24} jam tersisa';
+                }
+                if (remaining.inHours > 0) {
+                  return '${remaining.inHours} jam ${remaining.inMinutes % 60} menit tersisa';
+                }
+                if (remaining.inMinutes > 0) {
+                  return '${remaining.inMinutes} menit tersisa';
+                }
+                return 'Kurang dari 1 menit tersisa';
+              }
+
+              final String ticketStatusText = isTicketCurrentlyValid
+                  ? 'Tiket masih berlaku • ${buildRemainingText()}'
+                  : 'Tiket kadaluarsa';
+              final Color ticketStatusColor = isTicketCurrentlyValid
+                  ? Colors.green.shade100
+                  : Colors.red.shade100;
+              final Color ticketStatusTextColor = isTicketCurrentlyValid
+                  ? Colors.green.shade800
+                  : Colors.red.shade800;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  VodanHeader(
+                    crossAlign: CrossAxisAlignment.start,
+                    title: 'Tiket Lapak',
+                    subtitle:
+                        'Buat kode akses yang bisa dipakai kasir tanpa menunggu persetujuan owner.',
+                    subtitleStyle: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (passCode != null || ticket != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ticketStatusColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: ticketStatusTextColor.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isTicketCurrentlyValid
+                                ? Icons.check_circle_rounded
+                                : Icons.warning_amber_rounded,
+                            color: ticketStatusTextColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              ticketStatusText,
+                              style: TextStyle(
+                                color: ticketStatusTextColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (passCode == null || isEditMode) ...[
+                    const Text(
+                      'Kasir dapat menggunakan tiket ini untuk langsung masuk ke lapak bila owner sedang sibuk.',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: VodanDropdown(
+                        initialValue: getDurationOptionLabel(selectedDuration),
+                        labelText: 'Durasi tiket',
+                        icon: Icons.timer_rounded,
+                        items: durationOptions
+                            .map(
+                              (option) => DropdownMenuItem<String>(
+                                value: option['label'] as String,
+                                child: Text(option['label'] as String),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+
+                          final selectedOption = durationOptions.firstWhere(
+                            (option) => option['label'] == value,
+                          );
+
+                          setStateModal(() {
+                            selectedDuration =
+                                selectedOption['duration'] as Duration;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: VodanActionButton(
+                        text: isLoading ? 'Membuat tiket...' : 'Buat',
+                        onPressed: isLoading ? null : generateTicket,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: VodanActionButton(
+                        text: 'Batal',
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        onPressed: () {
+                          setStateModal(() {
+                            isEditMode = false;
+                          });
+                        },
+                      ),
+                    ),
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Kode Tiket',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SelectableText(
+                            passCode!,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: SizedBox(
+                              width: 180,
+                              height: 180,
+                              child: QrImageView(
+                                data: passCode!,
+                                version: QrVersions.auto,
+                                size: 180,
+                                backgroundColor: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Berlaku sampai ${ticket?.expiresAt.toLocal().toString().substring(0, 16) ?? formatDuration(selectedDuration)}',
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        SizedBox(
+                          width: 150,
+                          child: VodanActionButton(
+                            text: 'Salin Kode',
+                            prefixIcon: Icons.copy_rounded,
+                            onPressed: copyCode,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: VodanActionButton(
+                            text: 'Bagikan',
+                            prefixIcon: Icons.share_rounded,
+                            onPressed: shareTicket,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: VodanActionButton(
+                            text: 'Buat Lagi',
+                            prefixIcon: Icons.refresh_rounded,
+                            onPressed: () {
+                              setStateModal(() {
+                                isEditMode = true;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
           );
         },
       ),
@@ -622,6 +1070,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     final bankNameControllers = <TextEditingController>[];
     final accountNumberControllers = <TextEditingController>[];
     final accountNameControllers = <TextEditingController>[];
+    
     bool isLoading = false;
     String? qrisImageUrl;
     bool initialized = false;
@@ -873,21 +1322,21 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                         .read(workspaceControllerProvider.notifier)
                         .deleteWorkspace(workspaceId);
 
-                    if (context.mounted) {
-                      Navigator.pop(dialogContext);
+                    if (!mounted || !dialogContext.mounted) return;
 
-                      if (errorMessage == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Lapak berhasil dihapus'),
-                          duration: const Duration(seconds: 2),
-                        ));
-                        EnterWorkspaceRoute().go(context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(errorMessage),
-                          duration: const Duration(seconds: 2),
-                        ));
-                      }
+                    Navigator.pop(dialogContext);
+
+                    if (errorMessage == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Lapak berhasil dihapus'),
+                        duration: const Duration(seconds: 2),
+                      ));
+                      EnterWorkspaceRoute().go(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(errorMessage),
+                        duration: const Duration(seconds: 2),
+                      ));
                     }
                   })
             ]);
@@ -949,7 +1398,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             );
           }),
           const SizedBox(
-            height: 24,
+            height: 8,
           ),
 
           // SECTION 1: KEAMANAN & AKSES
@@ -968,6 +1417,15 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             prefixIcon: Icons.manage_accounts_rounded,
             color: theme.colorScheme.secondary,
             onTap: () => AccessRoute().go(context),
+          ),
+          const SizedBox(height: 8),
+          VodanActionCard(
+            title: 'Tiket Lapak',
+            subtitle:
+                'Buat kode akses agar kasir bisa masuk tanpa persetujuan owner.',
+            prefixIcon: Icons.airplane_ticket_rounded,
+            color: theme.colorScheme.secondary,
+            onTap: () => _showTicketBottomSheet(workspaceId),
           ),
           const SizedBox(height: 24),
 

@@ -16,7 +16,7 @@ class _VodanQrScannerScreenState extends State<VodanQrScannerScreen> with Widget
   // 1. Controller diatur dengan autoStart: false (Karena kita yang akan menyalakannya manual)
   final MobileScannerController _controller = MobileScannerController(
     autoStart: false,
-    autoZoom: true,
+    autoZoom: false,
     formats: const [BarcodeFormat.qrCode],
     detectionSpeed: DetectionSpeed.noDuplicates,
   );

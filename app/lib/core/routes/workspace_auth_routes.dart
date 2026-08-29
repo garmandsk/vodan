@@ -5,7 +5,8 @@ class CreateWorkspaceRoute extends GoRouteData with $CreateWorkspaceRoute {
   const CreateWorkspaceRoute();
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => CreateWorkspaceScreen();
+  Widget build(BuildContext context, GoRouterState state) =>
+      CreateWorkspaceScreen();
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
@@ -23,7 +24,8 @@ class CreateWorkspaceRoute extends GoRouteData with $CreateWorkspaceRoute {
 }
 
 @TypedGoRoute<WorkspaceCreatedEmptyRoute>(path: '/workspace-created')
-class WorkspaceCreatedEmptyRoute extends GoRouteData with $WorkspaceCreatedEmptyRoute{
+class WorkspaceCreatedEmptyRoute extends GoRouteData
+    with $WorkspaceCreatedEmptyRoute {
   const WorkspaceCreatedEmptyRoute();
 
   @override
@@ -33,13 +35,14 @@ class WorkspaceCreatedEmptyRoute extends GoRouteData with $WorkspaceCreatedEmpty
 }
 
 @TypedGoRoute<WorkspaceCreatedRoute>(path: '/workspace-created/:workspaceId')
-class WorkspaceCreatedRoute extends GoRouteData with $WorkspaceCreatedRoute{
+class WorkspaceCreatedRoute extends GoRouteData with $WorkspaceCreatedRoute {
   const WorkspaceCreatedRoute({required this.workspaceId});
 
   final String workspaceId;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => WorkspaceCreatedScreen(workspaceId: workspaceId);
+  Widget build(BuildContext context, GoRouterState state) =>
+      WorkspaceCreatedScreen(workspaceId: workspaceId);
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
@@ -53,27 +56,45 @@ class EnterWorkspaceRoute extends GoRouteData with $EnterWorkspaceRoute {
   const EnterWorkspaceRoute();
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => EnterWorkspaceScreen();
+  Widget build(BuildContext context, GoRouterState state) =>
+      EnterWorkspaceScreen();
 }
 
-@TypedGoRoute<WorkspaceWaitingRoomRoute>(path: '/workspace/:workspaceId/waiting-room')
-class WorkspaceWaitingRoomRoute extends GoRouteData with $WorkspaceWaitingRoomRoute {
+@TypedGoRoute<WorkspaceWaitingRoomRoute>(
+    path: '/workspace/:workspaceId/waiting-room')
+class WorkspaceWaitingRoomRoute extends GoRouteData
+    with $WorkspaceWaitingRoomRoute {
   const WorkspaceWaitingRoomRoute({
     required this.workspaceId,
-    required this.cashierName,
+    this.cashierName = '',
   });
 
   final String workspaceId;
   final String cashierName;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) => WaitingRoomScreen(workspaceId: workspaceId, cashierName: cashierName,);
+  Widget build(BuildContext context, GoRouterState state) {
+    final safeCashierName =
+        cashierName.trim().isNotEmpty ? cashierName.trim() : 'Kasir-Anonim';
+
+    return WaitingRoomScreen(
+      workspaceId: workspaceId,
+      cashierName: safeCashierName,
+    );
+  }
 
   @override
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final sessionId = ProviderScope.containerOf(context).read(currentCashierProvider)?.sessionId;
+    final sessionId = ProviderScope.containerOf(context)
+        .read(currentCashierProvider)
+        ?.sessionId;
 
-    if (sessionId == null) {
+    if (sessionId != null) {
+      return null;
+    }
+
+    final safeCashierName = cashierName.trim();
+    if (safeCashierName.isEmpty) {
       return const EnterWorkspaceRoute().location;
     }
 

@@ -28,7 +28,7 @@ class VoiceTransactionController extends _$VoiceTransactionController {
   }
 
   Future<void> startRecording() async {
-    // print('Mulai ngomong');
+    print('Mulai ngomong');
     if (state == VoiceState.listening) return;
 
     state = VoiceState.listening;
@@ -36,7 +36,7 @@ class VoiceTransactionController extends _$VoiceTransactionController {
   }
 
   Future<void> stopAndProcess(String workspaceId) async {
-    // print('Tombol dilepas, bersiap memproses...');
+    print('Tombol dilepas, bersiap memproses...');
 
     await Future.delayed(const Duration(milliseconds: 600));
 
@@ -45,21 +45,21 @@ class VoiceTransactionController extends _$VoiceTransactionController {
     final speechState = ref.read(sttServiceControllerProvider);
     final text = speechState.recognizedText;
 
-    // print('stop dan proses suara: $text');
+    print('stop dan proses suara: $text');
 
     processAiOrders(workspaceId, text);
   }
 
   void resetToIdle() {
     if (state != VoiceState.idle) {
-      // print('kembali siaga');
+      print('kembali siaga');
 
       state = VoiceState.idle;
     }
   }
 
   Future<void> processManualText(String text, String workspaceId) async {
-    // print('proses manual');
+    print('proses manual');
     processAiOrders(workspaceId, text);
   }
 

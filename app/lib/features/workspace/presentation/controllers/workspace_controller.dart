@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vodan/core/providers/session.dart';
+import 'package:vodan/features/workspace/data/models/ticket_model.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
 import 'package:vodan/features/workspace/data/models/payment_config_model.dart';
 import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
@@ -91,6 +92,30 @@ class WorkspaceController extends _$WorkspaceController {
     } catch (e) {
       // return 'gagal toggle sale broadcast
       return e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  Future<String?> generateShiftPass(
+    String workspaceId, {
+    Duration ttl = const Duration(hours: 24),
+  }) async {
+    try {
+      final repo = ref.read(workspaceRepositoryProvider);
+      final passCode =
+          await repo.createShiftPass(workspaceId: workspaceId, ttl: ttl);
+      return passCode;
+    } catch (e) {
+      return 'Gagal membuat tiket lapak: $e';
+    }
+  }
+
+  Future<TicketModel?> getShiftPass(String workspaceId) async {
+    try {
+      final repo = ref.read(workspaceRepositoryProvider);
+      final ticket = await repo.getShiftPass(workspaceId);
+      return ticket;
+    } catch (e) {
+      return null;
     }
   }
 

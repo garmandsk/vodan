@@ -22,7 +22,8 @@ class VodanTextFormField extends StatelessWidget {
     this.maxLines = 1,
     this.inputFormatters,
     this.textAlign,
-    this.textAlignVertical
+    this.textAlignVertical,
+    this.textCapitalization
   });
 
   final TextEditingController? controller;
@@ -44,6 +45,7 @@ class VodanTextFormField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextAlign? textAlign;
   final TextAlignVertical? textAlignVertical;
+  final TextCapitalization? textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,7 @@ class VodanTextFormField extends StatelessWidget {
       inputFormatters: inputFormatters ?? [],
       textAlign: textAlign ?? TextAlign.start,
       textAlignVertical: textAlignVertical ?? TextAlignVertical.center,
+      textCapitalization: textCapitalization ?? TextCapitalization.none,
       
      decoration: InputDecoration(
         labelText: labelText,

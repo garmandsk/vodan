@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:convert';
 
@@ -5,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vodan/core/providers/supabase_provider.dart';
+import 'package:vodan/features/workspace/data/models/ticket_model.dart';
 import 'package:vodan/features/workspace/data/models/workspace_response_model.dart';
 import 'package:vodan/features/workspace/data/models/payment_config_model.dart';
 import 'package:vodan/features/workspace_auth/data/models/create_workspace_request_model.dart';
@@ -15,6 +17,72 @@ class WorkspaceRepository {
   WorkspaceRepository(this._supabase);
 
   final SupabaseClient _supabase;
+
+  static String generateShiftPassCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rand = Random();
+    final code =
+        List.generate(8, (_) => chars[rand.nextInt(chars.length)]).join();
+    return code;
+  }
+
+  Future<String> createShiftPass({
+    required String workspaceId,
+    Duration ttl = const Duration(hours: 24),
+  }) async {
+    try {
+      String passCode = generateShiftPassCode();
+      int attempt = 0;
+
+      while (attempt < 10) {
+        final exists = await _supabase
+            .from('shift_passes')
+            .select('id')
+            .eq('pass_code', passCode)
+            .maybeSingle();
+
+        if (exists == null) break;
+
+        passCode = generateShiftPassCode();
+        attempt++;
+      }
+
+      final expiresAt = DateTime.now().toUtc().add(ttl);
+      final response = await _supabase
+          .from('shift_passes')
+          .insert({
+            'workspace_id': workspaceId,
+            'pass_code': passCode,
+            'expires_at': expiresAt.toIso8601String(),
+          })
+          .select('pass_code, expires_at')
+          .single();
+
+      return response['pass_code'] as String;
+    } catch (e) {
+      throw Exception('Gagal membuat tiket akses lapak: $e');
+    }
+  }
+
+  Future<TicketModel> getShiftPass(String workspaceId) async {
+    try {
+      final response = await _supabase
+          .from('shift_passes')
+          .select('pass_code, expires_at')
+          .eq('workspace_id', workspaceId)
+          .order('expires_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (response == null) {
+        throw Exception('Tidak ada tiket aktif untuk lapak ini');
+      }
+
+      return TicketModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Gagal mengambil shift pass: $e');
+    }
+  }
 
   Future<List<WorkspaceResponseModel>> getWorkspaceList() async {
     try {
