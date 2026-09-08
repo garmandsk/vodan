@@ -4,13 +4,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'tts_service_controller.g.dart';
 
 class TtsConfig {
-  const TtsConfig({
-    this.isSpeaking = false,
-    this.text = '',
-    this.rate = 1.0, 
-    this.pitch = 1.0,
-    this.languageCode = 'id-ID'
-  });
+  const TtsConfig(
+      {this.isSpeaking = false,
+      this.text = '',
+      this.rate = 1.0,
+      this.pitch = 1.0,
+      this.languageCode = 'id-ID'});
 
   final bool isSpeaking;
   final String text;
@@ -36,8 +35,12 @@ class TtsConfig {
 }
 
 @Riverpod(keepAlive: true)
-class TtsServiceController extends _$TtsServiceController { 
+class TtsServiceController extends _$TtsServiceController {
   final FlutterTts _flutterTts = FlutterTts();
+
+  String _normalizeLanguageCode(String languageCode) {
+    return languageCode.trim().replaceAll('_', '-');
+  }
 
   // Memori untuk replay
   String _aiText = 'halo';
@@ -45,7 +48,7 @@ class TtsServiceController extends _$TtsServiceController {
   double _aiPitch = 1.0;
   double _aiRate = 0.5;
 
-  @override 
+  @override
   TtsConfig build() {
     _initTts();
     return const TtsConfig();
@@ -64,19 +67,20 @@ class TtsServiceController extends _$TtsServiceController {
   }
 
   void setLanguageCode(String languageCode) {
-    state = state.copyWith(languageCode: languageCode);
+    state = state.copyWith(
+      languageCode: _normalizeLanguageCode(languageCode),
+    );
   }
 
-  void setDefaultAiTts({
-    String text = 'halo', 
-    double pitch = 1.0, 
-    double rate = 1.0, 
-    String languageCode = 'id-ID'
-  }) {
+  void setDefaultAiTts(
+      {String text = 'halo',
+      double pitch = 1.0,
+      double rate = 1.0,
+      String languageCode = 'id-ID'}) {
     _aiText = text;
     _aiPitch = pitch;
     _aiRate = rate;
-    _aiLanguageCode = languageCode;
+    _aiLanguageCode = _normalizeLanguageCode(languageCode);
 
     state = state.copyWith(
       text: _aiText,
@@ -86,7 +90,7 @@ class TtsServiceController extends _$TtsServiceController {
     );
   }
 
-  void defaultAiTts()  {
+  void defaultAiTts() {
     setText(_aiText);
     setPitch(_aiPitch);
     setRate(_aiRate);
@@ -118,20 +122,16 @@ class TtsServiceController extends _$TtsServiceController {
     try {
       final languages = await _flutterTts.getLanguages;
       final langList = List<String>.from(languages);
-      
-      if (langList.isEmpty) return ['id-ID', 'en-US']; 
+
+      if (langList.isEmpty) return ['id-ID', 'en-US'];
       return langList;
     } catch (e) {
       return ['id-ID', 'en-US'];
     }
   }
 
-  Future<void> speak({
-    String? text,
-    double? pitch,
-    double? rate,
-    String? languageCode
-  }) async {
+  Future<void> speak(
+      {String? text, double? pitch, double? rate, String? languageCode}) async {
     // print("Berbicara: $text");
     try {
       await stop();
@@ -143,8 +143,8 @@ class TtsServiceController extends _$TtsServiceController {
 
       // print('text: ${state.text}');
 
-      bool isAvailable = await _flutterTts.isLanguageAvailable(state.languageCode);
-      String finalLangCode = state.languageCode;
+      final finalLangCode = _normalizeLanguageCode(state.languageCode);
+      bool isAvailable = await _flutterTts.isLanguageAvailable(finalLangCode);
 
       if (!isAvailable) {
         List<dynamic> languages = await _flutterTts.getLanguages;
@@ -156,8 +156,8 @@ class TtsServiceController extends _$TtsServiceController {
           final result = await _flutterTts.setLanguage(availableLanguage[0]);
           isAvailable = (result == 1 || result == true);
         }
-      } 
-      
+      }
+
       if (isAvailable) {
         await _flutterTts.setLanguage(finalLangCode);
       } else {
@@ -173,7 +173,6 @@ class TtsServiceController extends _$TtsServiceController {
   }
 
   Future<void> replay() async {
-
     if (state.text.isNotEmpty) {
       await speak();
     } else {

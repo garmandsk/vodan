@@ -33,8 +33,28 @@ serve(async (req) => {
     
     if (!workspaceData) throw new Error("Workspace tidak ditemukan")
     
-    const aiKeys = workspaceData.ai_keys
-    if (!aiKeys || aiKeys.length === 0) throw new Error("AI Key tidak ditemukan.")
+    const storedAiKeys = Array.isArray(workspaceData.ai_keys)
+      ? workspaceData.ai_keys
+      : [];
+    const aiKeys: Array<{ provider: string; key: string }> = [];
+
+    for (const keyObj of storedAiKeys) {
+      if (!keyObj?.provider) continue;
+
+      const { data: decryptedKey, error: decryptError } = await supabase.rpc(
+        'get_decrypted_api_key',
+        {
+          p_workspace_id: workspace_id,
+          p_provider: keyObj.provider,
+        },
+      );
+
+      if (!decryptError && decryptedKey) {
+        aiKeys.push({ provider: keyObj.provider, key: decryptedKey });
+      }
+    }
+
+    if (aiKeys.length === 0) throw new Error("AI Key tidak ditemukan.")
 
     const supportedLanguages = (available_languages && available_languages.length > 0)
         ? available_languages.join(", ")

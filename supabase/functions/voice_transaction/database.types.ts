@@ -251,7 +251,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_decrypted_api_key: {
+        Args: {
+          p_provider: string
+          p_workspace_id: string
+        }
+        Returns: string | null
+      }
+      get_masked_api_keys: {
+        Args: {
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
+      sync_workspace_api_keys: {
+        Args: {
+          p_keys: Json
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       payment_method_enum: "cash" | "qris" | "transfer"

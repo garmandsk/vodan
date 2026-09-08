@@ -119,15 +119,14 @@ class WorkspaceRepository {
 
   Future<List<AiKeys>> getWorkspaceAiKeys(String workspaceId) async {
     try {
-      final response = await _supabase
-          .from('workspaces')
-          .select('ai_keys')
-          .eq('id', workspaceId)
-          .maybeSingle();
-      if (response == null) throw Exception('Lapak tidak dimukan');
-      final aiKeysJson = response['ai_keys'] as List?;
-      if (aiKeysJson == null) throw Exception('AI keys tidak ditemukan');
-      return aiKeysJson.map((json) => AiKeys.fromJson(json)).toList();
+      final response = await _supabase.rpc('get_masked_api_keys', params: {
+        'p_workspace_id': workspaceId,
+      });
+      final aiKeysJson = response as List? ?? const [];
+      return aiKeysJson
+          .whereType<Map<String, dynamic>>()
+          .map(AiKeys.fromJson)
+          .toList();
     } catch (e) {
       throw Exception('Gagal mengambil AI key lapak: $e');
     }
@@ -235,12 +234,11 @@ class WorkspaceRepository {
     try {
       final aiKeysJson = newAiKeys.map((key) => key.toJson()).toList();
 
-      final response = await _supabase
-          .from('workspaces')
-          .update({'ai_keys': aiKeysJson})
-          .eq('id', workspaceId)
-          .select('id');
-      return response.isNotEmpty;
+      await _supabase.rpc('sync_workspace_api_keys', params: {
+        'p_workspace_id': workspaceId,
+        'p_keys': aiKeysJson,
+      });
+      return true;
     } catch (e) {
       throw Exception('Gagal ubah AI keys lapak: $e');
     }

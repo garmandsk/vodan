@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
+import 'package:vodan/core/presentation/widgets/vodan_action_card.dart';
 import 'package:vodan/core/presentation/widgets/vodan_category.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dialog.dart';
 import 'package:vodan/core/presentation/widgets/vodan_quantity_button.dart';
@@ -35,27 +37,37 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     if (workspaceId == null) return;
 
     ref.read(broadcastServiceProvider).subscribeToWorkspace(
-      workspaceId: workspaceId, 
-      onNewSale: (payload) {
-        final isBroadcastEnabled = ref.read(currentWorkspaceProvider)!.isSaleBroadcastOn;
-        if (!isBroadcastEnabled) return;
+        workspaceId: workspaceId,
+        onNewSale: (payload) {
+          final isBroadcastEnabled =
+              ref.read(currentWorkspaceProvider)!.isSaleBroadcastOn;
+          if (!isBroadcastEnabled) return;
 
-        final String cashierName = payload['cashier_name'] ?? 'Kasir-Anonim';
-        final int price = payload['total_price'] ?? 0;
-        final formattedAmount = AppFormat.currency(price);
+          final String cashierName = payload['cashier_name'] ?? 'Kasir-Anonim';
+          final int price = payload['total_price'] ?? 0;
+          final formattedAmount = AppFormat.currency(price);
 
-        final currentContext = navigatorKey.currentContext;
-        if (currentContext == null) return;
+          final currentContext = navigatorKey.currentContext;
+          if (currentContext == null) return;
 
-        VodanTopNotification.show(
-          context: currentContext, 
-          overlayState: navigatorKey.currentState?.overlay,
-          title: 'Penjualan Baru! 🎉', 
-          message: '$cashierName baru saja melakukan penjualan senilai $formattedAmount',
-          backgroundColor: Theme.of(context).colorScheme.primary
-        );
-      }
-    );
+          VodanTopNotification.show(
+              context: currentContext,
+              overlayState: navigatorKey.currentState?.overlay,
+              title: 'Penjualan Baru! 🎉',
+              message:
+                  '$cashierName baru saja melakukan penjualan senilai $formattedAmount',
+              backgroundColor: Theme.of(context).colorScheme.primary);
+        });
+  }
+
+  Future<void> _openGoogleSheets() async {
+    final Uri url = Uri.parse(
+        'https://docs.google.com/spreadsheets/d/1GZLnX5r6eAtcUiblTxxBSUeChDF0s96LRNWU2gDMaB4/copy');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal membuka link $url')));
+    }
   }
 
   @override
@@ -129,7 +141,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               skipLoadingOnReload: true,
               data: (products) {
                 if (products.isEmpty && !productState.isLoading) {
-                  return _buildEmptyState(theme);
+                  final hasActiveFilter =
+                      _searchController.text.trim().isNotEmpty ||
+                          productNotifier.selectedCategory != 'Semua';
+
+                  return hasActiveFilter
+                      ? _buildEmptyQueryState(theme)
+                      : _buildEmptyProductState(theme);
                 }
 
                 return Stack(
@@ -226,7 +244,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   // ---------------------------------------------------------
   // KARTU PRODUK DENGAN TOMBOL DINAMIS
   // ---------------------------------------------------------
-  Widget _buildProductCard(ThemeData theme, ProductModel product, int qty, int index) {
+  Widget _buildProductCard(
+      ThemeData theme, ProductModel product, int qty, int index) {
     if (!product.isActive) return const SizedBox.shrink();
 
     return Container(
@@ -252,8 +271,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
                 image: DecorationImage(
-                  image:
-                      NetworkImage(_productImageUrl(product, index)),
+                  image: NetworkImage(_productImageUrl(product, index)),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -369,7 +387,40 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyProductState(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded,
+              size: 64, color: theme.colorScheme.surfaceContainerHighest),
+          const SizedBox(height: 16),
+          Text('Produk Masih Kosong',
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+              'Silahkan salin template Spreadsheet berikut, lalu Hubungkan Lapak, dan tambahkan produk',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: VodanActionCard(
+                title: 'Template Spreadsheets',
+                subtitle: 'Salin template Google Sheets untuk laporan lapakmu.',
+                prefixIcon: Icons.table_chart_rounded,
+                color: Colors.green,
+                onTap: _openGoogleSheets),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyQueryState(ThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

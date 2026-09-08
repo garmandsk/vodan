@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:vodan/core/presentation/widgets/pin_barrier.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dropdown.dart';
@@ -123,6 +124,16 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),
+      );
+    }
+  }
+
+  Future<void> _openGoogleAiStudioApiKeys() async {
+    final url = Uri.parse('https://aistudio.google.com/api-keys');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka halaman API Key')),
       );
     }
   }
@@ -1030,16 +1041,31 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                               ),
                             );
                           }),
-                          VodanActionButton(
-                            text: 'Tambah Key',
-                            prefixIcon: Icons.add,
-                            onPressed: isLoading
-                                ? null
-                                : () {
-                                    setStateModal(() {
-                                      rows.add(AiKeyFormRow());
-                                    });
-                                  },
+                          Row(
+                            spacing: 8,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: VodanActionButton(
+                                  text: 'Tambah Key',
+                                  prefixIcon: Icons.add,
+                                  onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          setStateModal(() {
+                                            rows.add(AiKeyFormRow());
+                                          });
+                                        },
+                                ),
+                              ),
+                              VodanActionButton(
+                                backgroundColor: Theme.of(context).colorScheme.surface,
+                                foregroundColor: Theme.of(context).colorScheme.primary,
+                                text: 'Belum ada API Key ? Buat disini',
+                                prefixIcon: Icons.key_rounded,
+                                onPressed: _openGoogleAiStudioApiKeys,
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 24),
                           SizedBox(

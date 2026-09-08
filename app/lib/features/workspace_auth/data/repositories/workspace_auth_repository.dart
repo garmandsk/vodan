@@ -13,7 +13,8 @@ class WorkspaceAuthRepository {
 
   final SupabaseClient _supabase;
 
-  Future<String> createWorkspace({required CreateWorkspaceRequestModel data}) async {
+  Future<String> createWorkspace(
+      {required CreateWorkspaceRequestModel data}) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
@@ -23,7 +24,7 @@ class WorkspaceAuthRepository {
       final pinBytes = utf8.encode(data.adminPin);
       final clientHashedPin = sha256.convert(pinBytes).toString();
 
-      final payload = data.toJson();
+      final payload = data.toJson()..remove('ai_keys');
       payload['owner_id'] = userId;
       payload['admin_pin'] = clientHashedPin;
 
@@ -33,21 +34,31 @@ class WorkspaceAuthRepository {
           .select('id')
           .single();
 
-      return response['id'] as String;
-      
+      final workspaceId = response['id'] as String;
+      await _supabase.rpc('sync_workspace_api_keys', params: {
+        'p_workspace_id': workspaceId,
+        'p_keys': data.aiKeys.map((key) => key.toJson()).toList(),
+      });
+
+      return workspaceId;
     } catch (e) {
       throw Exception('Gagal membuat lapak: $e');
     }
   }
 
-  Future<String> joinWaitingRoom({required String workspaceId, required String cashierName}) async {
-    final response = await _supabase.from('cashier_queue').insert({
-      'workspace_id': workspaceId,
-      'cashier_name': cashierName,
-      'status': 'pending',
-    }).select('id').single();
-    
-    return response['id']; 
+  Future<String> joinWaitingRoom(
+      {required String workspaceId, required String cashierName}) async {
+    final response = await _supabase
+        .from('cashier_queue')
+        .insert({
+          'workspace_id': workspaceId,
+          'cashier_name': cashierName,
+          'status': 'pending',
+        })
+        .select('id')
+        .single();
+
+    return response['id'];
   }
 
   // Stream: Pantau Status Diri Sendiri (Apakah sudah di-ACC Owner?)
@@ -56,11 +67,12 @@ class WorkspaceAuthRepository {
         .from('cashier_queue')
         .stream(primaryKey: ['id'])
         .eq('id', sessionId)
-        .map((event) => event.first); 
+        .map((event) => event.first);
   }
 
   // Stream: Pantau Kasir Lain di Ruang Tunggu yang Sama (Status Pending)
-  Stream<List<Map<String, dynamic>>> watchOtherCashiers(String workspaceId, String mySessionId) {
+  Stream<List<Map<String, dynamic>>> watchOtherCashiers(
+      String workspaceId, String mySessionId) {
     return _supabase
         .from('cashier_queue')
         .stream(primaryKey: ['id'])
@@ -70,7 +82,8 @@ class WorkspaceAuthRepository {
   }
 
   // Update Nama / Workspace ID (Saat user menekan tombol Edit)
-  Future<void> updateCredentials(String sessionId, String newName, String newWorkspaceId) async {
+  Future<void> updateCredentials(
+      String sessionId, String newName, String newWorkspaceId) async {
     await _supabase.from('cashier_queue').update({
       'cashier_name': newName,
       'workspace_id': newWorkspaceId,
@@ -78,20 +91,23 @@ class WorkspaceAuthRepository {
   }
 
   // Validasi Tiket Akses Shift (QR Dinamis)
-  Future<bool> validateShiftPass(String passCode, String workspaceId, String sessionId) async {
+  Future<bool> validateShiftPass(
+      String passCode, String workspaceId, String sessionId) async {
     final response = await _supabase
         .from('shift_passes')
         .select()
         .eq('pass_code', passCode)
         .eq('workspace_id', workspaceId)
-        .gte('expires_at', DateTime.now().toIso8601String()) 
+        .gte('expires_at', DateTime.now().toIso8601String())
         .maybeSingle();
 
     if (response != null) {
-      await _supabase.from('cashier_queue').update({'status': 'approved'}).eq('id', sessionId);
+      await _supabase
+          .from('cashier_queue')
+          .update({'status': 'approved'}).eq('id', sessionId);
       return true;
     }
-    return false; 
+    return false;
   }
 }
 

@@ -40,8 +40,10 @@ class _WorkspaceCreatedScreenState extends ConsumerState<WorkspaceCreatedScreen>
 
   Future<void> _openGoogleSheets() async {
     final Uri url = Uri.parse('https://docs.google.com/spreadsheets/d/1GZLnX5r6eAtcUiblTxxBSUeChDF0s96LRNWU2gDMaB4/copy');
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      debugPrint('Gagal membuka link $url');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal membuka link $url'))
+      );
     }
   }
 

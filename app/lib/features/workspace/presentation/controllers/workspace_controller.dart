@@ -72,8 +72,8 @@ class WorkspaceController extends _$WorkspaceController {
       await repo.editWorkspaceAiKeys(workspaceId, newAiKeys);
       return null;
     } catch (e) {
-      return 'Gagal edit AI keys lapak';
-      // return e.toString().replaceAll('Exception: ', '');
+      // return 'Gagal edit AI keys lapak';
+      return e.toString().replaceAll('Exception: ', '');
     }
   }
 

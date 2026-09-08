@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vodan/core/presentation/widgets/vodan_action_button.dart';
 import 'package:vodan/core/presentation/widgets/vodan_dropdown.dart';
 import 'package:vodan/core/presentation/widgets/vodan_header.dart';
@@ -16,7 +17,8 @@ class CreateWorkspaceScreen extends ConsumerStatefulWidget {
   const CreateWorkspaceScreen({super.key});
 
   @override
-  ConsumerState<CreateWorkspaceScreen> createState() => _CreateWorkspaceScreenState();
+  ConsumerState<CreateWorkspaceScreen> createState() =>
+      _CreateWorkspaceScreenState();
 }
 
 class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
@@ -29,6 +31,16 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
 
   bool _isAdminPinObscure = true;
 
+  Future<void> _openGoogleAiStudioApiKeys() async {
+    final url = Uri.parse('https://aistudio.google.com/api-keys');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka halaman API Key')),
+      );
+    }
+  }
+
   void _submitCreateWorkspaceForm() async {
     final isLoading = ref.read(workspaceAuthControllerProvider).isLoading;
     if (isLoading) return;
@@ -37,20 +49,21 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
       final List<AiKeys> aiKeys = _aiKeyRows
           .where((row) => row.keyController.text.trim().isNotEmpty)
           .map((row) => AiKeys(
-            provider: row.provider,
-            key: row.keyController.text.trim(),
-          ))
+                provider: row.provider,
+                key: row.keyController.text.trim(),
+              ))
           .toList();
 
       final requestData = CreateWorkspaceRequestModel(
-        name: _nameController.text.trim(), 
-        adminPin: _adminPinController.text.trim(), 
-        aiKeys: aiKeys
-      );
+          name: _nameController.text.trim(),
+          adminPin: _adminPinController.text.trim(),
+          aiKeys: aiKeys);
 
-      final String? newWorkspaceId = await ref.read(workspaceAuthControllerProvider.notifier).createWorkspace(requestData);
+      final String? newWorkspaceId = await ref
+          .read(workspaceAuthControllerProvider.notifier)
+          .createWorkspace(requestData);
       // print('Workspace iD Baru: $newWorkspaceId');
-      
+
       // redirect ke halaman sukses pembuatan lapak
       if (newWorkspaceId != null && mounted) {
         WorkspaceCreatedRoute(workspaceId: newWorkspaceId).go(context);
@@ -72,30 +85,24 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<void>>(
-      workspaceAuthControllerProvider,
-      (_, state) {
-        if (state.isLoading) return;
+    ref.listen<AsyncValue<void>>(workspaceAuthControllerProvider, (_, state) {
+      if (state.isLoading) return;
 
-        state.when(
+      state.when(
           data: (_) {
             // Jika sukses membuat lapak
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Pembuatan Lapak Berhasil 🎉')),
             );
-          }, 
+          },
           error: ((error, stackTrace) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Gagal Membuat Lapak: ${error.toString()}'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              )
-            );
-          }), 
-          loading: () {}
-        );
-      }
-    );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Gagal Membuat Lapak: ${error.toString()}'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ));
+          }),
+          loading: () {});
+    });
 
     final isLoading = ref.watch(workspaceAuthControllerProvider).isLoading;
 
@@ -111,16 +118,15 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
             spacing: 16,
             children: [
               VodanHeader(
-                icon: Icons.rocket_launch_rounded, 
+                icon: Icons.rocket_launch_rounded,
                 title: 'Siapkan Lapak Pintarmu',
                 subtitle: 'Ayo siapkan!',
                 subtitleStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
-      
               VodanTextFormField(
-                labelText: 'Nama Lapak / Toko', 
+                labelText: 'Nama Lapak / Toko',
                 prefixIcon: Icons.store_outlined,
                 controller: _nameController,
                 keyboardType: TextInputType.name,
@@ -131,24 +137,20 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                   return null;
                 },
               ),
-      
               VodanTextFormField(
                 controller: _adminPinController,
                 obscureText: _isAdminPinObscure,
-                labelText: 'Pin Admin Lapak', 
+                labelText: 'Pin Admin Lapak',
                 prefixIcon: Icons.dialpad,
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    _isAdminPinObscure 
-                    ? Icons.visibility_off 
-                    : Icons.visibility
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isAdminPinObscure = !_isAdminPinObscure;
-                    });
-                  }
-                ),
+                    icon: Icon(_isAdminPinObscure
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        _isAdminPinObscure = !_isAdminPinObscure;
+                      });
+                    }),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
@@ -161,7 +163,6 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                   return null;
                 },
               ),
-      
               Text(
                 'Konfigurasi AI API Key',
                 style: Theme.of(context).textTheme.headlineMedium,
@@ -169,7 +170,7 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
               ..._aiKeyRows.asMap().entries.map((entry) {
                 final index = entry.key;
                 final row = entry.value;
-      
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: Row(
@@ -178,37 +179,42 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                     children: [
                       Expanded(
                         child: VodanDropdown(
-                          initialValue: row.provider, 
-                          labelText: 'Provider', 
-                          icon: Icons.assistant, 
-                          items: const [
-                            DropdownMenuItem(value: 'Gemini', child: Text('Gemini')),
-                            DropdownMenuItem(value: 'OpenAI', child: Text('OpenAI (Segera)')),
-                            DropdownMenuItem(value: 'Claude', child: Text('Claude (Segera)')),
-                          ], 
-                          onChanged: isLoading ? null : (value) {
-                            if (value != 'Gemini') {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Provider ${value?.replaceAll(' (Segera)', 'replace')} belum tersedia. Nantikan segera! 🚀'),
-                                  backgroundColor: Colors.blueGrey,
-                                  duration: const Duration(seconds: 2),
-                                )
-                              );
-                            
-                              setState(() {
-                                row.provider = 'Gemini';
-                              });
-                              return;
-                            }
-                            
-                            setState(() {
-                              row.provider = value!;
-                            });
-                          }
-                        ),
+                            initialValue: row.provider,
+                            labelText: 'Provider',
+                            icon: Icons.assistant,
+                            items: const [
+                              DropdownMenuItem(
+                                  value: 'Gemini', child: Text('Gemini')),
+                              DropdownMenuItem(
+                                  value: 'OpenAI',
+                                  child: Text('OpenAI (Segera)')),
+                              DropdownMenuItem(
+                                  value: 'Claude',
+                                  child: Text('Claude (Segera)')),
+                            ],
+                            onChanged: isLoading
+                                ? null
+                                : (value) {
+                                    if (value != 'Gemini') {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(
+                                        content: Text(
+                                            'Provider ${value?.replaceAll(' (Segera)', 'replace')} belum tersedia. Nantikan segera! 🚀'),
+                                        backgroundColor: Colors.blueGrey,
+                                        duration: const Duration(seconds: 2),
+                                      ));
+
+                                      setState(() {
+                                        row.provider = 'Gemini';
+                                      });
+                                      return;
+                                    }
+
+                                    setState(() {
+                                      row.provider = value!;
+                                    });
+                                  }),
                       ),
-      
                       Expanded(
                         flex: 3,
                         child: VodanTextFormField(
@@ -216,9 +222,9 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                           prefixIcon: Icons.key_rounded,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              row.isObscure 
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                              row.isObscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
                             onPressed: () {
                               setState(() {
@@ -237,42 +243,59 @@ class _CreateWorkspaceScreenState extends ConsumerState<CreateWorkspaceScreen> {
                           },
                         ),
                       ),
-      
                       if (_aiKeyRows.length > 1) ...[
-                        const SizedBox(width: 8,),
+                        const SizedBox(
+                          width: 8,
+                        ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
-                          onPressed: isLoading ? null : () {
-                            setState(() {
-                              _aiKeyRows[index].dispose();
-                              _aiKeyRows.removeAt(index);
-                            });
-                          },
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.red),
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _aiKeyRows[index].dispose();
+                                    _aiKeyRows.removeAt(index);
+                                  });
+                                },
                         )
                       ]
                     ],
                   ),
                 );
               }),
-      
-              Align(
-                alignment: Alignment.centerLeft,
-                child: VodanActionButton(
-                  text: 'Tambah Key',
-                  prefixIcon: Icons.add,
-                  onPressed: isLoading ? null : () {
-                    setState(() {
-                      _aiKeyRows.add(AiKeyFormRow());
-                    });
-                  },
-                ),
+              Row(
+                spacing: 8,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: VodanActionButton(
+                      text: 'Tambah Key',
+                      prefixIcon: Icons.add,
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              setState(() {
+                                _aiKeyRows.add(AiKeyFormRow());
+                              });
+                            },
+                    ),
+                  ),
+                  VodanActionButton(
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    text: 'Belum ada API Key ? Buat disini',
+                    prefixIcon: Icons.key_rounded,
+                    onPressed: _openGoogleAiStudioApiKeys,
+                  ),
+                ],
               ),
-              const SizedBox(height: 32,),
-      
+              const SizedBox(
+                height: 32,
+              ),
               VodanActionButton(
-                text: 'Buka Lapak Sekarang', 
-                onPressed: isLoading ? null : _submitCreateWorkspaceForm
-              ),
+                  text: 'Buka Lapak Sekarang',
+                  onPressed: isLoading ? null : _submitCreateWorkspaceForm),
             ],
           ),
         ),
