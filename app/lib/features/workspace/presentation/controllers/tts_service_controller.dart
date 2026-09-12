@@ -123,7 +123,7 @@ class TtsServiceController extends _$TtsServiceController {
       final languages = await _flutterTts.getLanguages;
       final langList = List<String>.from(languages);
 
-      if (langList.isEmpty) return ['id-ID', 'en-US'];
+      // if (langList.isEmpty) return ['id-ID', 'en-US'];
       return langList;
     } catch (e) {
       return ['id-ID', 'en-US'];

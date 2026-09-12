@@ -121,16 +121,15 @@ class _WorkspaceListScreenState extends ConsumerState<WorkspaceListScreen> {
             subtitle: workspace.id,
             prefixIcon: Icons.store_rounded,
             color: Theme.of(context).colorScheme.primary,
-            onTap: () {
+            onTap: () async {
               try {
                 final name =
                     ref.watch(getAccountProvider)?.userMetadata?['name'] ??
                         'Anonim';
-                // print('name: $name');
                 ref.read(currentWorkspaceProvider.notifier).setWorkspaceSession(
                     workspaceId: workspace.id, workspaceName: workspace.name);
 
-                ref
+                await ref
                     .read(waitingRoomControllerProvider.notifier)
                     .joinAsOwner(workspace.id, name);
 

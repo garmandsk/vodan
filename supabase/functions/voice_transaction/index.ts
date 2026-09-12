@@ -7,6 +7,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function formatPrice(price: number, languageCode: unknown): string {
+  const normalizedLocale = typeof languageCode === 'string'
+    ? languageCode.trim().replaceAll('_', '-')
+    : 'id-ID';
+
+  try {
+    return `${new Intl.NumberFormat(normalizedLocale || 'id-ID').format(price)} rupiah`;
+  } catch (_) {
+    return `${new Intl.NumberFormat('id-ID').format(price)} rupiah`;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -229,6 +241,7 @@ serve(async (req) => {
       if  (finalJsonData.orders && Array.isArray(finalJsonData.orders)) {
         let totalPrice = 0;
         let isStockAdjusted = false;
+        const depletedProductNames: string[] = [];
 
         finalJsonData.orders = finalJsonData.orders.map((order: any) => {
           const product = productData.find((p: any) => p.id === order.id);
@@ -238,6 +251,7 @@ serve(async (req) => {
 
             if (availableStock <= 0) {
               isStockAdjusted = true;
+              depletedProductNames.push(product.name);
               return null;
             }
 
@@ -270,15 +284,46 @@ serve(async (req) => {
         // Penambahan key & value isStockAdjusted
         finalJsonData.is_stock_adjusted = isStockAdjusted;
 
-        // Respons total price yang dibaca flutter tts nant
-        const aiLangCode = finalJsonData.tts_config?.language_code || 'id-ID';
-        const formattedPrice = totalPrice.toLocaleString(aiLangCode);
-        const totalPriceResponse = `${formattedPrice} rupiah`;
+        // Produk yang sudah habis tidak boleh tetap muncul di katalog aktif.
+        for (const productName of depletedProductNames) {
+          const product = productData.find((p: any) => p.name === productName);
+          if (!product) continue;
 
-        if (finalJsonData.voice_response.includes('[TOTAL_PRICE]')) {
-          finalJsonData.voice_response = finalJsonData.voice_response.replace('[TOTAL_PRICE]', totalPriceResponse);
-        } else {
-          finalJsonData.voice_response += ` Totalnya ${totalPriceResponse}.`;
+          const { error: deactivateError } = await supabase
+            .from('products')
+            .update({ is_active: false })
+            .eq('workspace_id', workspace_id)
+            .eq('id', product.id);
+
+          if (deactivateError) {
+            console.error(`[Stock] Gagal menonaktifkan ${productName}:`, deactivateError);
+          }
+        }
+
+        // Jangan membuat transaksi kosong. Biarkan Flutter memperlakukan respons
+        // ini sebagai chat agar order stok habis tidak masuk keranjang.
+        if (depletedProductNames.length > 0) {
+          const productLabel = depletedProductNames.join(', ');
+          finalJsonData.intent = 'chat';
+          finalJsonData.orders = [];
+          finalJsonData.total_price = 0;
+          finalJsonData.voice_response = `Maaf, stok ${productLabel} sudah habis.`;
+          finalJsonData.fallback_response = finalJsonData.voice_response;
+          finalJsonData.is_stock_adjusted = true;
+        }
+
+        // Respons total price yang dibaca flutter tts nant
+        if (finalJsonData.intent === 'transaction') {
+          const totalPriceResponse = formatPrice(
+            totalPrice,
+            finalJsonData.tts_config?.language_code,
+          );
+
+          if (finalJsonData.voice_response.includes('[TOTAL_PRICE]')) {
+            finalJsonData.voice_response = finalJsonData.voice_response.replace('[TOTAL_PRICE]', totalPriceResponse);
+          } else {
+            finalJsonData.voice_response += ` Totalnya ${totalPriceResponse}.`;
+          }
         }
       }
     } else {

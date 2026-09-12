@@ -9,22 +9,23 @@ part 'waiting_room_controller.g.dart';
 Stream<Map<String, dynamic>> myStatusStream(Ref ref) {
   final sessionId = ref.watch(currentCashierProvider)?.sessionId;
   if (sessionId == null) return const Stream.empty();
-  
+
   final repo = ref.watch(waitingRoomRepositoryProvider);
   return repo.watchMyStatus(sessionId);
 }
 
 @riverpod
-Stream<List<String>> otherCashiersStream(Ref ref, {required String workspaceId}) {
+Stream<List<String>> otherCashiersStream(Ref ref,
+    {required String workspaceId}) {
   final sessionId = ref.watch(currentCashierProvider)?.sessionId;
   if (sessionId == null) {
     // print('🚨 STREAM BERHENTI: sessionId masih null!');
-    
+
     return Stream.value([]);
   }
 
   final repo = ref.watch(waitingRoomRepositoryProvider);
-  
+
   return repo.watchOtherCashiers(workspaceId, sessionId).map((list) {
     // print('📦 Data mentah dari Supabase: $list');
 
@@ -35,27 +36,20 @@ Stream<List<String>> otherCashiersStream(Ref ref, {required String workspaceId})
 @Riverpod(keepAlive: true)
 class WaitingRoomController extends _$WaitingRoomController {
   @override
-  void build() {} 
+  void build() {}
 
-  Future<String?> joinAsOwner(String workspaceId, String ownerName) async {
-    try {
-      final deviceId = ref.read(currentCashierProvider.notifier).deviceId;
-      final repo = ref.read(waitingRoomRepositoryProvider);
-      final sessionId = await repo.joinAsOwner(
-        workspaceId: workspaceId,
-        deviceId: deviceId,
-        ownerName: ownerName,
-      );
+  Future<void> joinAsOwner(String workspaceId, String ownerName) async {
+    final deviceId = ref.read(currentCashierProvider.notifier).deviceId;
+    final repo = ref.read(waitingRoomRepositoryProvider);
+    final sessionId = await repo.joinAsOwner(
+      workspaceId: workspaceId,
+      deviceId: deviceId,
+      ownerName: ownerName,
+    );
 
-      ref.read(currentCashierProvider.notifier).setSession(
-        id: sessionId,
-        name: ownerName,
-        isAdmin: true
-      );
-      return 'Gabung lapak sebagai owner berhasil';
-    } catch (e) {
-      return 'Gabung lapak sebagai owner gagal: $e';
-    }
+    ref
+        .read(currentCashierProvider.notifier)
+        .setSession(id: sessionId, name: ownerName, isAdmin: true);
   }
 
   Future<void> join(String workspaceId, String cashierName) async {
@@ -70,30 +64,29 @@ class WaitingRoomController extends _$WaitingRoomController {
 
     final repo = ref.read(waitingRoomRepositoryProvider);
     final sessionId = await repo.joinWaitingRoom(
-      workspaceId: workspaceId, 
-      cashierName: cashierName,
-      deviceId: deviceId
-    );
-    
+        workspaceId: workspaceId, cashierName: cashierName, deviceId: deviceId);
+
     // Simpan ID Sesi ke provider notifier
-    ref.read(currentCashierProvider.notifier).setSession(
-      name: cashierName, 
-      id: sessionId,
-      isAdmin: false
-    );
+    ref
+        .read(currentCashierProvider.notifier)
+        .setSession(name: cashierName, id: sessionId, isAdmin: false);
   }
 
   Future<void> editData(String newName, String newWorkspaceId) async {
     final sessionId = ref.read(currentCashierProvider)?.sessionId;
     if (sessionId == null) return;
-    
-    await ref.read(waitingRoomRepositoryProvider).updateCredentials(sessionId, newName, newWorkspaceId);
+
+    await ref
+        .read(waitingRoomRepositoryProvider)
+        .updateCredentials(sessionId, newName, newWorkspaceId);
   }
 
   Future<bool> scanTicket(String passCode, String workspaceId) async {
     final sessionId = ref.read(currentCashierProvider)?.sessionId;
     if (sessionId == null) return false;
-    
-    return await ref.read(waitingRoomRepositoryProvider).validateShiftPass(passCode, workspaceId, sessionId);
+
+    return await ref
+        .read(waitingRoomRepositoryProvider)
+        .validateShiftPass(passCode, workspaceId, sessionId);
   }
 }
