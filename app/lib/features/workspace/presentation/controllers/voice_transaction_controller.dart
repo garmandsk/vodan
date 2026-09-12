@@ -21,6 +21,7 @@ enum VoiceState {
 @Riverpod(keepAlive: true)
 class VoiceTransactionController extends _$VoiceTransactionController {
   bool isLastStockAdjusted = false;
+  bool _isStopping = false;
 
   @override
   VoiceState build() {
@@ -36,18 +37,25 @@ class VoiceTransactionController extends _$VoiceTransactionController {
   }
 
   Future<void> stopAndProcess(String workspaceId) async {
+    if (state != VoiceState.listening || _isStopping) return;
+
+    _isStopping = true;
     print('Tombol dilepas, bersiap memproses...');
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      await Future.delayed(const Duration(milliseconds: 600));
 
-    await ref.read(sttServiceControllerProvider.notifier).stopListening();
+      await ref.read(sttServiceControllerProvider.notifier).stopListening();
 
-    final speechState = ref.read(sttServiceControllerProvider);
-    final text = speechState.recognizedText;
+      final speechState = ref.read(sttServiceControllerProvider);
+      final text = speechState.recognizedText;
 
-    print('stop dan proses suara: $text');
+      print('stop dan proses suara: $text');
 
-    processAiOrders(workspaceId, text);
+      await processAiOrders(workspaceId, text);
+    } finally {
+      _isStopping = false;
+    }
   }
 
   void resetToIdle() {
